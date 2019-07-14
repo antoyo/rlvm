@@ -9,6 +9,8 @@ mod parser;
 use std::fs::File;
 use std::io::{Write/*, stdin*/, stdout};
 
+use rlvm::llvm_init;
+
 use error::Result;
 use gen::Generator;
 use lexer::{Lexer, Token};
@@ -27,6 +29,8 @@ pub extern "C" fn putchard(char: f64) -> f64 {
 }
 
 fn main() -> Result<()> {
+    let _llvm = llvm_init();
+
     let file = File::open("tests/fib.kal")?;
     //let stdin = stdin();
     let lexer = Lexer::new(file);

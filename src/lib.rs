@@ -13,6 +13,7 @@ pub use builder::Builder;
 pub use exec_engine::{ExecutionEngine, link_mcjit};
 pub use module::Module;
 pub use target::{initialize_native_asm_printer, initialize_native_target};
+pub use value::Value;
 
 use std::cell::Cell;
 use std::marker::PhantomData;

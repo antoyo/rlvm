@@ -1,3 +1,5 @@
+pub mod constant;
+
 use ffi::LLVMValueRef;
 
 pub struct Value(LLVMValueRef);

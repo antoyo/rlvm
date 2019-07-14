@@ -1,8 +1,10 @@
+pub mod float;
 pub mod function;
 pub mod integer;
 
 use ffi::LLVMTypeRef;
 
+pub use self::float::*;
 pub use self::integer::*;
 
 pub struct Type(LLVMTypeRef);

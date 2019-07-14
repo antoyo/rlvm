@@ -33,7 +33,7 @@ extern "C" {
     pub fn LLVMLinkInMCJIT();
     pub fn LLVM_InitializeNativeTarget() -> LLVMBool;
     pub fn LLVMCreateExecutionEngineForModule(OutEE: *mut LLVMExecutionEngineRef, M: LLVMModuleRef, OutError: *mut *mut c_char) -> LLVMBool;
-    pub fn LLVMCreateGenericValueOfInt(Ty: LLVMTypeRef, N: u64 /* TODO: u128? */, IsSigned: LLVMBool) -> LLVMGenericValueRef;
+    pub fn LLVMCreateGenericValueOfInt(Ty: LLVMTypeRef, N: u64, IsSigned: LLVMBool) -> LLVMGenericValueRef;
     pub fn LLVMRunFunction(EE: LLVMExecutionEngineRef, F: LLVMValueRef, NumArgs: u32, Args: *mut LLVMGenericValueRef)-> LLVMGenericValueRef;
     pub fn LLVM_InitializeNativeAsmPrinter() -> LLVMBool;
     pub fn LLVMGetFunctionAddress(EE: LLVMExecutionEngineRef, Name: *const c_char) -> u64;
@@ -42,4 +42,7 @@ extern "C" {
     pub fn LLVMDisposeModule(M: LLVMModuleRef);
     pub fn LLVMRemoveModule(EE: LLVMExecutionEngineRef, M: LLVMModuleRef, OutMod: *mut LLVMModuleRef, OutError: *mut *mut c_char) -> LLVMBool;
     pub fn LLVMShutdown();
+    pub fn LLVMConstInt(IntTy: LLVMTypeRef, N: u64, SignExtend: LLVMBool) -> LLVMValueRef;
+    pub fn LLVMConstReal(RealTy: LLVMTypeRef , N: f64) -> LLVMValueRef;
+    pub fn LLVMDoubleType() -> LLVMTypeRef;
 }
