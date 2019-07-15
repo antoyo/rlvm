@@ -31,7 +31,7 @@ pub extern "C" fn putchard(char: f64) -> f64 {
 fn main() -> Result<()> {
     let _llvm = llvm_init();
 
-    let file = File::open("tests/fib.kal")?;
+    let file = File::open("tests/extern.kal")?;
     //let stdin = stdin();
     let lexer = Lexer::new(file);
     let mut parser = Parser::new(lexer);
@@ -54,7 +54,7 @@ fn main() -> Result<()> {
                 continue;
             },
             Token::Def => {
-                match parser.definition().and_then(|definition| generator.function(definition)) {
+                match parser.definition().map(|definition| generator.function(definition)) {
                     Ok(_definition) => (),
                     Err(error) => {
                         parser.lexer.next_token()?;
@@ -63,8 +63,8 @@ fn main() -> Result<()> {
                 }
             },
             Token::Extern => {
-                match parser.extern_().and_then(|prototype| generator.prototype(&prototype)) {
-                    Ok(prototype) => println!("{}", prototype),
+                match parser.extern_().map(|prototype| generator.prototype(&prototype)) {
+                    Ok(prototype) => println!("Prototype"),
                     Err(error) => {
                         parser.lexer.next_token()?;
                         eprintln!("Error: {:?}", error);
@@ -72,8 +72,8 @@ fn main() -> Result<()> {
                 }
             },
             _ => {
-                match parser.toplevel().and_then(|expr| generator.function(expr)) {
-                    Ok(function) => println!("{}", function()),
+                match parser.toplevel().map(|expr| generator.function(expr)) {
+                    Ok(function) => println!("Function"),
                     Err(error) => {
                         parser.lexer.next_token()?;
                         eprintln!("Error: {:?}", error);

@@ -11,9 +11,29 @@ pub type LLVMBool = i32;
 
 #[repr(C)]
 pub enum LLVMVerifierFailureAction {
-  LLVMAbortProcessAction,
-  LLVMPrintMessageAction,
-  LLVMReturnStatusAction,
+    LLVMAbortProcessAction,
+    LLVMPrintMessageAction,
+    LLVMReturnStatusAction,
+}
+
+#[repr(C)]
+pub enum LLVMRealPredicate {
+    LLVMRealPredicateFalse,
+    LLVMRealOEQ,
+    LLVMRealOGT,
+    LLVMRealOGE,
+    LLVMRealOLT,
+    LLVMRealOLE,
+    LLVMRealONE,
+    LLVMRealORD,
+    LLVMRealUNO,
+    LLVMRealUEQ,
+    LLVMRealUGT,
+    LLVMRealUGE,
+    LLVMRealULT,
+    LLVMRealULE,
+    LLVMRealUNE,
+    LLVMRealPredicateTrue,
 }
 
 #[link(name="LLVM-8")]
@@ -45,4 +65,15 @@ extern "C" {
     pub fn LLVMConstInt(IntTy: LLVMTypeRef, N: u64, SignExtend: LLVMBool) -> LLVMValueRef;
     pub fn LLVMConstReal(RealTy: LLVMTypeRef , N: f64) -> LLVMValueRef;
     pub fn LLVMDoubleType() -> LLVMTypeRef;
+    pub fn LLVMBuildFCmp(builder: LLVMBuilderRef, Op: LLVMRealPredicate, LHS: LLVMValueRef, RHS: LLVMValueRef, Name: *const c_char) -> LLVMValueRef;
+    pub fn LLVMBuildUIToFP(builder: LLVMBuilderRef, Val: LLVMValueRef, DestTy: LLVMTypeRef, Name: *const c_char) -> LLVMValueRef;
+    pub fn LLVMBuildFAdd(builder: LLVMBuilderRef, LHS: LLVMValueRef, RHS: LLVMValueRef, Name: *const c_char) -> LLVMValueRef;
+    pub fn LLVMBuildFMul(builder: LLVMBuilderRef, LHS: LLVMValueRef, RHS: LLVMValueRef, Name: *const c_char) -> LLVMValueRef;
+    pub fn LLVMBuildFSub(builder: LLVMBuilderRef, LHS: LLVMValueRef, RHS: LLVMValueRef, Name: *const c_char) -> LLVMValueRef;
+    pub fn LLVMGetNamedFunction(M: LLVMModuleRef, Name: *const c_char) -> LLVMValueRef;
+    pub fn LLVMCountParams(Fn: LLVMValueRef) -> u32;
+    pub fn LLVMBuildCall(builder: LLVMBuilderRef, Fn: LLVMValueRef, Args: *mut LLVMValueRef, NumArgs: u32, Name: *const c_char) -> LLVMValueRef;
+    pub fn LLVMSetValueName2(Val: LLVMValueRef, Name: *const c_char, NameLen: usize);
+    pub fn LLVMVerifyFunction(Fn: LLVMValueRef, Action: LLVMVerifierFailureAction) -> LLVMBool;
+    pub fn LLVMDeleteFunction(Fn: LLVMValueRef);
 }

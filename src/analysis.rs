@@ -15,7 +15,7 @@ pub enum VerifierFailureAction {
 }
 
 impl VerifierFailureAction {
-    fn as_raw(&self) -> LLVMVerifierFailureAction {
+    pub fn as_raw(&self) -> LLVMVerifierFailureAction {
         match *self {
             VerifierFailureAction::AbortProcess => LLVMVerifierFailureAction::LLVMAbortProcessAction,
             VerifierFailureAction::PrintMessage => LLVMVerifierFailureAction::LLVMPrintMessageAction,

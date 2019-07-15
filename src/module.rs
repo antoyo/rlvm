@@ -4,13 +4,18 @@ use basic_block::BasicBlock;
 use ffi::{
     LLVMAddFunction,
     LLVMAppendBasicBlock,
+    LLVMCountParams,
+    LLVMDeleteFunction,
+    LLVMGetNamedFunction,
     LLVMGetParam,
     LLVMModuleCreateWithName,
     LLVMModuleRef,
     LLVMValueRef,
+    LLVMVerifyFunction,
 };
 use types::Type;
 use value::Value;
+use VerifierFailureAction;
 
 pub struct Module(LLVMModuleRef);
 
@@ -30,6 +35,19 @@ impl Module {
     pub fn as_raw(&self) -> LLVMModuleRef {
         self.0
     }
+
+    pub fn get_named_function(&self, name: &str) -> Option<Function> {
+        let cstring = CString::new(name).expect("cstring");
+        unsafe {
+            let value = LLVMGetNamedFunction(self.as_raw(), cstring.as_ptr());
+            if value.is_null() {
+                None
+            }
+            else {
+                Some(Function(value))
+            }
+        }
+    }
 }
 
 pub struct Function(LLVMValueRef);
@@ -46,9 +64,21 @@ impl Function {
         self.0
     }
 
+    pub fn delete(&self) {
+        unsafe { LLVMDeleteFunction(self.as_raw()); }
+    }
+
     pub fn get_param(&self, index: usize) -> Value {
         unsafe {
             Value::from_raw(LLVMGetParam(self.as_raw(), index as u32))
         }
+    }
+
+    pub fn param_count(&self) -> usize {
+        unsafe { LLVMCountParams(self.as_raw()) as usize }
+    }
+
+    pub fn verify(&self, action: VerifierFailureAction) -> bool {
+        unsafe { LLVMVerifyFunction(self.as_raw(), action.as_raw()) != 0 }
     }
 }

@@ -1,27 +1,41 @@
+use std::collections::HashMap;
+use std::iter;
+
 use rlvm::{
     Builder,
     Module,
+    RealPredicate,
     Value,
+    VerifierFailureAction,
 };
+use rlvm::module::Function;
 use rlvm::types;
 use rlvm::value::constant;
 
 use ast::{
+    self,
+    BinaryOp,
     Expr,
-    Function,
     Prototype,
 };
 use error::Result;
+use error::Error::{
+    Undefined,
+    WrongArgumentCount,
+};
 
 pub struct Generator {
     builder: Builder,
+    module: Module,
+    values: HashMap<String, Value>,
 }
 
 impl Generator {
     pub fn new() -> Self {
-        let module = Module::new_with_name("module");
         Self {
             builder: Builder::new(),
+            module: Module::new_with_name("module"),
+            values: HashMap::new(),
         }
     }
 
@@ -31,7 +45,7 @@ impl Generator {
                 Expr::Number(num) => constant::real(types::double(), num),
                 Expr::Variable(name) => {
                     match self.values.get(&name) {
-                        Some(&variable) => self.builder.use_var(variable),
+                        Some(variable) => variable.clone(),
                         None => return Err(Undefined("variable")),
                     }
                 },
@@ -39,40 +53,69 @@ impl Generator {
                     let left = self.expr(*left)?;
                     let right = self.expr(*right)?;
                     match op {
-                        BinaryOp::Plus => self.builder.ins().fadd(left, right),
-                        BinaryOp::Minus => self.builder.ins().fsub(left, right),
-                        BinaryOp::Times => self.builder.ins().fmul(left, right),
+                        BinaryOp::Plus => self.builder.fadd(left, right, "result"),
+                        BinaryOp::Minus => self.builder.fsub(left, right, "result"),
+                        BinaryOp::Times => self.builder.fmul(left, right, "result"),
                         BinaryOp::LessThan => {
-                            let boolean = self.builder.ins().fcmp(FloatCC::LessThan, left, right);
-                            let int = self.builder.ins().bint(types::I32, boolean);
-                            self.builder.ins().fcvt_from_sint(types::F64, int)
+                            let boolean = self.builder.fcmp(RealPredicate::UnorderedLesserThan, left, right, "cmptmp");
+                            self.builder.unsigned_int_to_floating_point(boolean, types::double(), "booltemp")
                         },
+                        _ => unimplemented!(),
                     }
                 },
                 Expr::Call(name, args) => {
-                    match self.functions.get(&name) {
+                    match self.module.get_named_function(&name) {
                         Some(func) => {
-                            if func.param_count != args.len() {
+                            if func.param_count() != args.len() {
                                 return Err(WrongArgumentCount);
                             }
-                            let local_func = self.module.declare_func_in_func(func.id, &mut self.builder.func);
                             let arguments: Result<Vec<_>> = args.into_iter().map(|arg| self.expr(arg)).collect();
                             let arguments = arguments?;
-                            let call = self.builder.ins().call(local_func, &arguments);
-                            self.builder.inst_results(call)[0]
+                            self.builder.call(func, &arguments, "func_call")
                         },
                         None => return Err(Undefined("function")),
                     }
                 },
+                _ => unimplemented!("{:?}", expr),
             };
         Ok(value)
     }
 
-    pub fn function(&self, function: Function) -> Result<fn() -> f64> {
-        Ok(|| 0.0)
+    pub fn function(&mut self, function: ast::Function) -> Result<Function> {
+        let llvm_function =
+            match self.module.get_named_function(&function.prototype.function_name) {
+                Some(llvm_function) => llvm_function,
+                None => self.prototype(&function.prototype),
+            };
+        let entry = llvm_function.append_basic_block("entry");
+        self.builder.position_at_end(entry);
+        self.values.clear();
+        for (index, arg) in function.prototype.parameters.iter().enumerate() {
+            self.values.insert(arg.clone(), llvm_function.get_param(index));
+        }
+
+        let return_value =
+            match self.expr(function.body) {
+                Ok(value) => value,
+                Err(error) => {
+                    llvm_function.delete();
+                    return Err(error);
+                },
+            };
+
+        self.builder.ret(return_value);
+        llvm_function.verify(VerifierFailureAction::AbortProcess);
+
+        Ok(llvm_function)
     }
 
-    pub fn prototype(&self, prototype: &Prototype) -> Result<i32> {
-        Ok(0)
+    pub fn prototype(&self, prototype: &Prototype) -> Function {
+        let param_types: Vec<_> = iter::repeat(types::double()).take(prototype.parameters.len()).collect();
+        let function_type = types::function::new(types::double(), &param_types, false);
+        let function = self.module.add_function(&prototype.function_name, function_type);
+        for (index, param) in prototype.parameters.iter().enumerate() {
+            function.get_param(index).set_name(param);
+        }
+        function
     }
 }

@@ -1,7 +1,13 @@
 pub mod constant;
 
-use ffi::LLVMValueRef;
+use std::ffi::CString;
 
+use ffi::{
+    LLVMSetValueName2,
+    LLVMValueRef,
+};
+
+#[derive(Clone)]
 pub struct Value(LLVMValueRef);
 
 impl Value {
@@ -11,5 +17,12 @@ impl Value {
 
     pub fn as_raw(&self) -> LLVMValueRef {
         self.0
+    }
+
+    pub fn set_name(&self, name: &str) {
+        let cstring = CString::new(name).expect("cstring");
+        unsafe {
+            LLVMSetValueName2(self.as_raw(), cstring.as_ptr(), name.as_bytes().len());
+        }
     }
 }
