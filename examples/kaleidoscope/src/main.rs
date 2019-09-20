@@ -9,7 +9,12 @@ mod parser;
 use std::fs::File;
 use std::io::{Write/*, stdin*/, stdout};
 
-use rlvm::llvm_init;
+use rlvm::{
+    initialize_native_asm_printer,
+    initialize_native_target,
+    link_mcjit,
+    llvm_init
+};
 
 use error::Result;
 use gen::Generator;
@@ -31,11 +36,15 @@ pub extern "C" fn putchard(char: f64) -> f64 {
 fn main() -> Result<()> {
     let _llvm = llvm_init();
 
+    link_mcjit();
+    initialize_native_asm_printer();
+    initialize_native_target();
+
     let file = File::open("tests/extern.kal")?;
     //let stdin = stdin();
     let lexer = Lexer::new(file);
     let mut parser = Parser::new(lexer);
-    let mut generator = Generator::new();
+    let mut generator = Generator::new().expect("generator");
     print!("ready> ");
     stdout().flush()?;
     loop {
@@ -72,8 +81,11 @@ fn main() -> Result<()> {
                 }
             },
             _ => {
-                match parser.toplevel().map(|expr| generator.function(expr)) {
-                    Ok(function) => println!("Function"),
+                match parser.toplevel().and_then(|expr| generator.function(expr)) {
+                    Ok(function) => {
+                        let func: fn() -> f64 = unsafe { function.cast0_ret() };
+                        println!("Evaluated to {}", func());
+                    },
                     Err(error) => {
                         parser.lexer.next_token()?;
                         eprintln!("Error: {:?}", error);

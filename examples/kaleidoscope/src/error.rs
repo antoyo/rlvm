@@ -8,9 +8,11 @@ use self::Error::*;
 pub type Result<T> = result::Result<T, Error>;
 
 pub enum Error {
+    CannotFindFunction,
     FunctionRedef,
     FunctionRedefWithDifferentParams,
     Io(io::Error),
+    LLVM(String),
     ParseFloat(ParseFloatError),
     Undefined(&'static str),
     UnknownChar(char),
@@ -21,16 +23,24 @@ pub enum Error {
 impl Debug for Error {
     fn fmt(&self, formatter: &mut Formatter) -> fmt::Result {
         match *self {
+            CannotFindFunction => write!(formatter, "cannot find function"),
             FunctionRedef => write!(formatter, "redefinition of function"),
             FunctionRedefWithDifferentParams =>
                 write!(formatter, "redefinition of function with different number of parameters"),
             Io(ref error) => error.fmt(formatter),
+            LLVM(ref error) => write!(formatter, "LLVM error: {}", error),
             ParseFloat(ref error) => error.fmt(formatter),
             Undefined(msg) => write!(formatter, "undefined {}", msg),
             UnknownChar(char) => write!(formatter, "unknown char `{}`", char),
             Unexpected(msg) => write!(formatter, "unexpected {}", msg),
             WrongArgumentCount => write!(formatter, "wrong argument count"),
         }
+    }
+}
+
+impl From<String> for Error {
+    fn from(error: String) -> Self {
+        LLVM(error)
     }
 }
 

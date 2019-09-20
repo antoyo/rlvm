@@ -3,6 +3,8 @@ use std::iter;
 
 use rlvm::{
     Builder,
+    ExecutionEngine,
+    FunctionAddress,
     Module,
     RealPredicate,
     Value,
@@ -20,23 +22,27 @@ use ast::{
 };
 use error::Result;
 use error::Error::{
+    CannotFindFunction,
     Undefined,
     WrongArgumentCount,
 };
 
 pub struct Generator {
     builder: Builder,
+    engine: ExecutionEngine,
     module: Module,
     values: HashMap<String, Value>,
 }
 
 impl Generator {
-    pub fn new() -> Self {
-        Self {
+    pub fn new() -> Result<Self> {
+        let module = Module::new_with_name("module");
+        Ok(Self {
             builder: Builder::new(),
-            module: Module::new_with_name("module"),
+            engine: ExecutionEngine::new_for_module(&module)?,
+            module,
             values: HashMap::new(),
-        }
+        })
     }
 
     fn expr(&self, expr: Expr) -> Result<Value> {
@@ -81,9 +87,10 @@ impl Generator {
         Ok(value)
     }
 
-    pub fn function(&mut self, function: ast::Function) -> Result<Function> {
+    pub fn function(&mut self, function: ast::Function) -> Result<FunctionAddress> {
+        let name = &function.prototype.function_name;
         let llvm_function =
-            match self.module.get_named_function(&function.prototype.function_name) {
+            match self.module.get_named_function(&name) {
                 Some(llvm_function) => llvm_function,
                 None => self.prototype(&function.prototype),
             };
@@ -106,7 +113,11 @@ impl Generator {
         self.builder.ret(return_value);
         llvm_function.verify(VerifierFailureAction::AbortProcess);
 
-        Ok(llvm_function)
+        self.module.dump();
+
+        let function_address = self.engine.get_function_address(&name);
+
+        function_address.ok_or(CannotFindFunction)
     }
 
     pub fn prototype(&self, prototype: &Prototype) -> Function {

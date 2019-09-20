@@ -10,7 +10,7 @@ pub mod value;
 
 pub use analysis::VerifierFailureAction;
 pub use builder::{Builder, RealPredicate};
-pub use exec_engine::{ExecutionEngine, link_mcjit};
+pub use exec_engine::{ExecutionEngine, FunctionAddress, link_mcjit};
 pub use module::Module;
 pub use target::{initialize_native_asm_printer, initialize_native_target};
 pub use value::Value;

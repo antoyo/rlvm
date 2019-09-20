@@ -22,7 +22,7 @@ pub fn link_mcjit() {
 pub struct ExecutionEngine(LLVMExecutionEngineRef);
 
 impl ExecutionEngine {
-    pub fn new_for_module(module: Module) -> Result<Self, String> {
+    pub fn new_for_module(module: &Module) -> Result<Self, String> {
         assert_llvm_initialized();
 
         let mut engine: LLVMExecutionEngineRef = ptr::null_mut();

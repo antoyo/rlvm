@@ -15,7 +15,12 @@ use rlvm::types;
 fn main() {
     let _llvm = llvm_init();
 
+    link_mcjit();
+    initialize_native_asm_printer();
+    initialize_native_target();
+
     let module = Module::new_with_name("module");
+    let engine = ExecutionEngine::new_for_module(&module).expect("failed to create execution engine");
     let param_types = [types::int32(), types::int32()];
     let function_type = types::function::new(types::int32(), &param_types, false);
     let sum = module.add_function("sum", function_type);
@@ -30,11 +35,7 @@ fn main() {
 
     module.verify(VerifierFailureAction::AbortProcess).expect("module verify");
 
-    link_mcjit();
-    initialize_native_asm_printer();
-    initialize_native_target();
-
-    let engine = ExecutionEngine::new_for_module(module).expect("failed to create execution engine");
+    module.dump();
 
     let sum: fn(i32, i32) -> i32 = unsafe { engine.get_function_address("sum").expect("sum function").cast2_ret() };
     println!("{}", sum(40, 2));

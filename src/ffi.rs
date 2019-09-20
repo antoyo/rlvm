@@ -76,4 +76,5 @@ extern "C" {
     pub fn LLVMSetValueName2(Val: LLVMValueRef, Name: *const c_char, NameLen: usize);
     pub fn LLVMVerifyFunction(Fn: LLVMValueRef, Action: LLVMVerifierFailureAction) -> LLVMBool;
     pub fn LLVMDeleteFunction(Fn: LLVMValueRef);
+    pub fn LLVMDumpModule(M: LLVMModuleRef);
 }

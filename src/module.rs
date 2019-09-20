@@ -6,6 +6,7 @@ use ffi::{
     LLVMAppendBasicBlock,
     LLVMCountParams,
     LLVMDeleteFunction,
+    LLVMDumpModule,
     LLVMGetNamedFunction,
     LLVMGetParam,
     LLVMModuleCreateWithName,
@@ -34,6 +35,10 @@ impl Module {
 
     pub fn as_raw(&self) -> LLVMModuleRef {
         self.0
+    }
+
+    pub fn dump(&self) {
+        unsafe { LLVMDumpModule(self.as_raw()) }
     }
 
     pub fn get_named_function(&self, name: &str) -> Option<Function> {
