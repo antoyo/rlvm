@@ -8,6 +8,7 @@ pub type LLVMBuilderRef = *mut c_void;
 pub type LLVMExecutionEngineRef = *mut c_void;
 pub type LLVMGenericValueRef = *mut c_void;
 pub type LLVMBool = i32;
+pub type LLVMPassManagerRef = *mut c_void;
 
 #[repr(C)]
 pub enum LLVMVerifierFailureAction {
@@ -79,4 +80,12 @@ extern "C" {
     pub fn LLVMDumpModule(M: LLVMModuleRef);
     pub fn LLVMAddModule(EE: LLVMExecutionEngineRef, M: LLVMModuleRef);
     pub fn LLVMDumpValue(Val: LLVMValueRef);
+    pub fn LLVMCreateFunctionPassManagerForModule(M: LLVMModuleRef) -> LLVMPassManagerRef;
+    pub fn LLVMDisposePassManager(PM: LLVMPassManagerRef);
+    pub fn LLVMRunPassManager(PM: LLVMPassManagerRef, M: LLVMModuleRef) -> LLVMBool;
+    pub fn LLVMRunFunctionPassManager(FPM: LLVMPassManagerRef, F: LLVMValueRef) -> LLVMBool;
+    pub fn LLVMAddInstructionCombiningPass(PM: LLVMPassManagerRef);
+    pub fn LLVMAddReassociatePass(PM: LLVMPassManagerRef);
+    pub fn LLVMAddGVNPass(PM: LLVMPassManagerRef);
+    pub fn LLVMAddCFGSimplificationPass(PM: LLVMPassManagerRef);
 }

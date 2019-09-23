@@ -5,6 +5,7 @@ use std::mem;
 use rlvm::{
     Builder,
     Module,
+    FunctionPassManager,
     RealPredicate,
     Value,
     VerifierFailureAction,
@@ -29,16 +30,28 @@ pub struct Generator {
     builder: Builder,
     function_prototypes: HashMap<String, Prototype>,
     module: Module,
+    pass_manager: FunctionPassManager,
     values: HashMap<String, Value>,
+}
+
+fn new_module() -> (Module, FunctionPassManager) {
+    let module = Module::new_with_name("module");
+    let pass_manager = FunctionPassManager::new_for_module(&module);
+    pass_manager.add_instruction_combining_pass();
+    pass_manager.add_reassociate_pass();
+    pass_manager.add_gvn_pass();
+    pass_manager.add_cfg_simplification_pass();
+    (module, pass_manager)
 }
 
 impl Generator {
     pub fn new() -> Result<Self> {
-        let module = Module::new_with_name("module");
+        let (module, pass_manager) = new_module();
         Ok(Self {
             builder: Builder::new(),
             function_prototypes: HashMap::new(),
             module,
+            pass_manager,
             values: HashMap::new(),
         })
     }
@@ -113,9 +126,13 @@ impl Generator {
         self.builder.ret(return_value);
         llvm_function.verify(VerifierFailureAction::AbortProcess);
 
+        self.pass_manager.run(&llvm_function);
+
         self.module.dump();
 
-        let module = mem::replace(&mut self.module, Module::new_with_name("module"));
+        let (module, pass_manager) = new_module();
+        let module = mem::replace(&mut self.module, module);
+        self.pass_manager = pass_manager;
 
         Ok((module, name))
     }
