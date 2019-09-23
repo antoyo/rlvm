@@ -4,12 +4,14 @@ use std::ptr;
 
 use assert_llvm_initialized;
 use ffi::{
+    LLVMAddModule,
     LLVMCreateExecutionEngineForModule,
     LLVMDisposeExecutionEngine,
     LLVMDisposeMessage,
     LLVMExecutionEngineRef,
     LLVMGetFunctionAddress,
     LLVMLinkInMCJIT,
+    LLVMRemoveModule,
 };
 use module::Module;
 
@@ -41,6 +43,12 @@ impl ExecutionEngine {
         }
     }
 
+    pub fn add_module(&self, module: &Module) {
+        unsafe {
+            LLVMAddModule(self.as_raw(), module.as_raw());
+        }
+    }
+
     pub fn as_raw(&self) -> LLVMExecutionEngineRef {
         self.0
     }
@@ -56,6 +64,23 @@ impl ExecutionEngine {
         }
         else {
             Some(FunctionAddress(address))
+        }
+    }
+
+    pub fn remove_module(&self, module: &Module) -> Result<(), String> {
+        let mut error = ptr::null_mut();
+        unsafe {
+            let mut new_mod = mem::zeroed();
+            if LLVMRemoveModule(self.as_raw(), module.as_raw(), &mut new_mod, &mut error) != 0 {
+                assert_ne!(error, ptr::null_mut());
+                let msg = CStr::from_ptr(error);
+                let error_msg = msg.to_str().expect("error message").to_string();
+                LLVMDisposeMessage(error);
+                Err(error_msg)
+            }
+            else {
+                Ok(())
+            }
         }
     }
 }

@@ -1,17 +1,16 @@
 use std::collections::HashMap;
 use std::iter;
+use std::mem;
 
 use rlvm::{
     Builder,
-    ExecutionEngine,
-    FunctionAddress,
     Module,
     RealPredicate,
     Value,
     VerifierFailureAction,
 };
 use rlvm::module::Function;
-use rlvm::types;
+use rlvm::types::{self, Type};
 use rlvm::value::constant;
 
 use ast::{
@@ -22,14 +21,13 @@ use ast::{
 };
 use error::Result;
 use error::Error::{
-    CannotFindFunction,
     Undefined,
     WrongArgumentCount,
 };
 
 pub struct Generator {
     builder: Builder,
-    engine: ExecutionEngine,
+    function_prototypes: HashMap<String, Prototype>,
     module: Module,
     values: HashMap<String, Value>,
 }
@@ -39,7 +37,7 @@ impl Generator {
         let module = Module::new_with_name("module");
         Ok(Self {
             builder: Builder::new(),
-            engine: ExecutionEngine::new_for_module(&module)?,
+            function_prototypes: HashMap::new(),
             module,
             values: HashMap::new(),
         })
@@ -70,7 +68,7 @@ impl Generator {
                     }
                 },
                 Expr::Call(name, args) => {
-                    match self.module.get_named_function(&name) {
+                    match self.get_named_function(&name) {
                         Some(func) => {
                             if func.param_count() != args.len() {
                                 return Err(WrongArgumentCount);
@@ -87,8 +85,8 @@ impl Generator {
         Ok(value)
     }
 
-    pub fn function(&mut self, function: ast::Function) -> Result<FunctionAddress> {
-        let name = &function.prototype.function_name;
+    pub fn function(&mut self, function: ast::Function) -> Result<(Module, String)> {
+        let name = function.prototype.function_name.clone();
         let llvm_function =
             match self.module.get_named_function(&name) {
                 Some(llvm_function) => llvm_function,
@@ -110,23 +108,43 @@ impl Generator {
                 },
             };
 
+        self.function_prototypes.insert(name.clone(), function.prototype);
+
         self.builder.ret(return_value);
         llvm_function.verify(VerifierFailureAction::AbortProcess);
 
         self.module.dump();
 
-        let function_address = self.engine.get_function_address(&name);
+        let module = mem::replace(&mut self.module, Module::new_with_name("module"));
 
-        function_address.ok_or(CannotFindFunction)
+        Ok((module, name))
     }
 
     pub fn prototype(&self, prototype: &Prototype) -> Function {
         let param_types: Vec<_> = iter::repeat(types::double()).take(prototype.parameters.len()).collect();
         let function_type = types::function::new(types::double(), &param_types, false);
-        let function = self.module.add_function(&prototype.function_name, function_type);
+        let function = self.add_function(&prototype.function_name, function_type);
         for (index, param) in prototype.parameters.iter().enumerate() {
             function.get_param(index).set_name(param);
         }
         function
+    }
+
+    fn add_function(&self, name: &str, typ: Type) -> Function {
+        self.module.add_function(&name, typ)
+    }
+
+    fn get_named_function(&self, name: &str) -> Option<Function> {
+        match self.module.get_named_function(&name) {
+            Some(function) => Some(function),
+            None => {
+                if let Some(prototype) = self.function_prototypes.get(name) {
+                    Some(self.prototype(prototype))
+                }
+                else {
+                    None
+                }
+            },
+        }
     }
 }

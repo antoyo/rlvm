@@ -8,7 +8,6 @@ use self::Error::*;
 pub type Result<T> = result::Result<T, Error>;
 
 pub enum Error {
-    CannotFindFunction,
     FunctionRedef,
     FunctionRedefWithDifferentParams,
     Io(io::Error),
@@ -23,7 +22,6 @@ pub enum Error {
 impl Debug for Error {
     fn fmt(&self, formatter: &mut Formatter) -> fmt::Result {
         match *self {
-            CannotFindFunction => write!(formatter, "cannot find function"),
             FunctionRedef => write!(formatter, "redefinition of function"),
             FunctionRedefWithDifferentParams =>
                 write!(formatter, "redefinition of function with different number of parameters"),

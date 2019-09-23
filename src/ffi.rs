@@ -77,4 +77,6 @@ extern "C" {
     pub fn LLVMVerifyFunction(Fn: LLVMValueRef, Action: LLVMVerifierFailureAction) -> LLVMBool;
     pub fn LLVMDeleteFunction(Fn: LLVMValueRef);
     pub fn LLVMDumpModule(M: LLVMModuleRef);
+    pub fn LLVMAddModule(EE: LLVMExecutionEngineRef, M: LLVMModuleRef);
+    pub fn LLVMDumpValue(Val: LLVMValueRef);
 }

@@ -6,7 +6,9 @@ use ffi::{
     LLVMAppendBasicBlock,
     LLVMCountParams,
     LLVMDeleteFunction,
+    LLVMDisposeModule,
     LLVMDumpModule,
+    LLVMDumpValue,
     LLVMGetNamedFunction,
     LLVMGetParam,
     LLVMModuleCreateWithName,
@@ -55,6 +57,15 @@ impl Module {
     }
 }
 
+/*impl Drop for Module {
+    fn drop(&mut self) {
+        println!("Dispose");
+        unsafe {
+            LLVMDisposeModule(self.as_raw());
+        }
+    }
+}*/
+
 pub struct Function(LLVMValueRef);
 
 impl Function {
@@ -71,6 +82,10 @@ impl Function {
 
     pub fn delete(&self) {
         unsafe { LLVMDeleteFunction(self.as_raw()); }
+    }
+
+    pub fn dump(&self) {
+        unsafe { LLVMDumpValue(self.as_raw()); }
     }
 
     pub fn get_param(&self, index: usize) -> Value {

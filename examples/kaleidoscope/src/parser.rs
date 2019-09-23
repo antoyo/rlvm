@@ -52,6 +52,10 @@ impl<R: Read> Parser<R> {
     }
 
     fn args(&mut self) -> Result<Vec<Expr>> {
+        if self.lexer.peek()? == &Token::CloseParen {
+            return Ok(vec![]);
+        }
+
         let mut args = vec![self.expr()?];
         while *self.lexer.peek()? == Token::Comma {
             self.eat(Token::Comma)?;
