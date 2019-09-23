@@ -1,5 +1,3 @@
-// TODO: calling putchard.
-
 extern crate rlvm;
 
 mod ast;
