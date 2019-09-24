@@ -3,7 +3,9 @@ use std::iter;
 use std::mem;
 
 use rlvm::{
+    BasicBlock,
     Builder,
+    Context,
     Module,
     FunctionPassManager,
     RealPredicate,
@@ -28,6 +30,7 @@ use error::Error::{
 
 pub struct Generator {
     builder: Builder,
+    context: Context,
     function_prototypes: HashMap<String, Prototype>,
     module: Module,
     pass_manager: FunctionPassManager,
@@ -47,8 +50,10 @@ fn new_module() -> (Module, FunctionPassManager) {
 impl Generator {
     pub fn new() -> Result<Self> {
         let (module, pass_manager) = new_module();
+        let context = Context::new();
         Ok(Self {
-            builder: Builder::new(),
+            builder: Builder::new_in_context(&context),
+            context,
             function_prototypes: HashMap::new(),
             module,
             pass_manager,
@@ -74,7 +79,7 @@ impl Generator {
                         BinaryOp::Minus => self.builder.fsub(left, right, "result"),
                         BinaryOp::Times => self.builder.fmul(left, right, "result"),
                         BinaryOp::LessThan => {
-                            let boolean = self.builder.fcmp(RealPredicate::UnorderedLesserThan, left, right, "cmptmp");
+                            let boolean = self.builder.fcmp(RealPredicate::UnorderedLesserThan, &left, &right, "cmptmp");
                             self.builder.unsigned_int_to_floating_point(boolean, types::double(), "booltemp")
                         },
                         _ => unimplemented!(),
@@ -93,6 +98,48 @@ impl Generator {
                         None => return Err(Undefined("function")),
                     }
                 },
+                Expr::If { condition, then, else_ } => {
+                    let condition = self.expr(*condition)?;
+                    let condition = self.builder.fcmp(RealPredicate::OrderedNotEqual, &condition, &constant::real(types::double(), 0.0), "ifcond");
+
+                    let start_basic_block = self.builder.get_insert_block();
+
+                    let function = start_basic_block.get_parent();
+
+                    let then_basic_block = BasicBlock::append_in_context(&self.context, &function, "then");
+
+                    self.builder.position_at_end(&then_basic_block);
+
+                    let then_value = self.expr(*then)?;
+
+                    let new_then_basic_block = self.builder.get_insert_block();
+
+                    let else_basic_block = BasicBlock::append_in_context(&self.context, &function, "else");
+                    self.builder.position_at_end(&else_basic_block);
+
+                    let else_value = self.expr(*else_)?;
+
+                    let new_else_basic_block = self.builder.get_insert_block();
+
+                    let merge_basic_block = BasicBlock::append_in_context(&self.context, &function, "ifcont");
+                    self.builder.position_at_end(&merge_basic_block);
+
+                    let phi = self.builder.phi(types::double(), "result");
+                    phi.add_incoming(&[(&then_value, &new_then_basic_block), (&else_value, &new_else_basic_block)]);
+
+                    self.builder.position_at_end(&start_basic_block);
+                    self.builder.cond_br(condition, then_basic_block, else_basic_block);
+
+                    self.builder.position_at_end(&new_then_basic_block);
+                    self.builder.br(&merge_basic_block);
+
+                    self.builder.position_at_end(&new_else_basic_block);
+                    self.builder.br(&merge_basic_block);
+
+                    self.builder.position_at_end(&merge_basic_block);
+
+                    phi
+                },
                 _ => unimplemented!("{:?}", expr),
             };
         Ok(value)
@@ -106,7 +153,7 @@ impl Generator {
                 None => self.prototype(&function.prototype),
             };
         let entry = llvm_function.append_basic_block("entry");
-        self.builder.position_at_end(entry);
+        self.builder.position_at_end(&entry);
         self.values.clear();
         for (index, arg) in function.prototype.parameters.iter().enumerate() {
             self.values.insert(arg.clone(), llvm_function.get_param(index));

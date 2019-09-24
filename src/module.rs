@@ -59,6 +59,10 @@ impl Module {
 pub struct Function(LLVMValueRef);
 
 impl Function {
+    pub fn from_raw(value: LLVMValueRef) -> Self {
+        Self(value)
+    }
+
     pub fn append_basic_block(&self, block_name: &str) -> BasicBlock {
         let cstring = CString::new(block_name).expect("cstring");
         unsafe {

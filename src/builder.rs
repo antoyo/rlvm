@@ -1,18 +1,24 @@
 use std::ffi::CString;
 
+use Context;
 use basic_block::BasicBlock;
 use ffi::{
     LLVMBuildAdd,
+    LLVMBuildBr,
     LLVMBuildCall,
+    LLVMBuildCondBr,
     LLVMBuildFAdd,
     LLVMBuildFCmp,
     LLVMBuildFMul,
     LLVMBuildFSub,
+    LLVMBuildPhi,
     LLVMBuilderRef,
     LLVMBuildRet,
     LLVMBuildUIToFP,
     LLVMCreateBuilder,
+    LLVMCreateBuilderInContext,
     LLVMDisposeBuilder,
+    LLVMGetInsertBlock,
     LLVMPositionBuilderAtEnd,
     LLVMRealPredicate,
 };
@@ -69,6 +75,12 @@ impl Builder {
         unsafe { Builder(LLVMCreateBuilder()) }
     }
 
+    pub fn new_in_context(context: &Context) -> Self {
+        unsafe {
+            Builder(LLVMCreateBuilderInContext(context.as_raw()))
+        }
+    }
+
     pub fn add(&self, op1: Value, op2: Value, name: &str) -> Value {
         let cstring = CString::new(name).expect("cstring");
         unsafe {
@@ -80,10 +92,22 @@ impl Builder {
         self.0
     }
 
+    pub fn br(&self, basic_block: &BasicBlock) -> Value {
+        unsafe {
+            Value::from_raw(LLVMBuildBr(self.as_raw(), basic_block.as_raw()))
+        }
+    }
+
     pub fn call(&self, func: Function, args: &[Value], name: &str) -> Value {
         let cstring = CString::new(name).expect("cstring");
         unsafe {
             Value::from_raw(LLVMBuildCall(self.as_raw(), func.as_raw(), args.as_ptr() as *mut _, args.len() as u32, cstring.as_ptr()))
+        }
+    }
+
+    pub fn cond_br(&self, if_: Value, then: BasicBlock, else_block: BasicBlock) -> Value {
+        unsafe {
+            Value::from_raw(LLVMBuildCondBr(self.as_raw(), if_.as_raw(), then.as_raw(), else_block.as_raw()))
         }
     }
 
@@ -94,7 +118,7 @@ impl Builder {
         }
     }
 
-    pub fn fcmp(&self, op: RealPredicate, op1: Value, op2: Value, name: &str) -> Value {
+    pub fn fcmp(&self, op: RealPredicate, op1: &Value, op2: &Value, name: &str) -> Value {
         let cstring = CString::new(name).expect("cstring");
         unsafe {
             Value::from_raw(LLVMBuildFCmp(self.as_raw(), op.as_raw(), op1.as_raw(), op2.as_raw(), cstring.as_ptr()))
@@ -115,7 +139,20 @@ impl Builder {
         }
     }
 
-    pub fn position_at_end(&self, entry: BasicBlock) {
+    pub fn get_insert_block(&self) -> BasicBlock {
+        unsafe {
+            BasicBlock::from_raw(LLVMGetInsertBlock(self.as_raw()))
+        }
+    }
+
+    pub fn phi(&self, typ: Type, name: &str) -> Value {
+        let cstring = CString::new(name).expect("cstring");
+        unsafe {
+            Value::from_raw(LLVMBuildPhi(self.as_raw(), typ.as_raw(), cstring.as_ptr()))
+        }
+    }
+
+    pub fn position_at_end(&self, entry: &BasicBlock) {
         unsafe {
             LLVMPositionBuilderAtEnd(self.as_raw(), entry.as_raw());
         }

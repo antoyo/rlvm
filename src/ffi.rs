@@ -1,4 +1,8 @@
-use std::os::raw::{c_char, c_void};
+use std::os::raw::{
+    c_char,
+    c_uint,
+    c_void,
+};
 
 pub type LLVMModuleRef = *mut c_void;
 pub type LLVMTypeRef = *mut c_void;
@@ -9,6 +13,7 @@ pub type LLVMExecutionEngineRef = *mut c_void;
 pub type LLVMGenericValueRef = *mut c_void;
 pub type LLVMBool = i32;
 pub type LLVMPassManagerRef = *mut c_void;
+pub type LLVMContextRef = *mut c_void;
 
 #[repr(C)]
 pub enum LLVMVerifierFailureAction {
@@ -88,4 +93,14 @@ extern "C" {
     pub fn LLVMAddReassociatePass(PM: LLVMPassManagerRef);
     pub fn LLVMAddGVNPass(PM: LLVMPassManagerRef);
     pub fn LLVMAddCFGSimplificationPass(PM: LLVMPassManagerRef);
+    pub fn LLVMGetInsertBlock(Builder: LLVMBuilderRef) -> LLVMBasicBlockRef;
+    pub fn LLVMContextCreate() -> LLVMContextRef;
+    pub fn LLVMCreateBuilderInContext(C: LLVMContextRef) -> LLVMBuilderRef;
+    pub fn LLVMCreateBasicBlockInContext(C: LLVMContextRef, Name: *const c_char) -> LLVMBasicBlockRef;
+    pub fn LLVMAppendBasicBlockInContext(C: LLVMContextRef, Fn: LLVMValueRef, Name: *const c_char) -> LLVMBasicBlockRef;
+    pub fn LLVMGetBasicBlockParent(BB: LLVMBasicBlockRef) -> LLVMValueRef;
+    pub fn LLVMBuildCondBr(builder: LLVMBuilderRef, If: LLVMValueRef, Then: LLVMBasicBlockRef, Else: LLVMBasicBlockRef) -> LLVMValueRef;
+    pub fn LLVMBuildBr(builder: LLVMBuilderRef, Dest: LLVMBasicBlockRef) -> LLVMValueRef;
+    pub fn LLVMBuildPhi(builder: LLVMBuilderRef, Ty: LLVMTypeRef, Name: *const c_char) -> LLVMValueRef;
+    pub fn LLVMAddIncoming(PhiNode: LLVMValueRef, IncomingValues: *mut LLVMValueRef, IncomingBlocks: *mut LLVMBasicBlockRef, Count: c_uint);
 }

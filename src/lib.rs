@@ -1,6 +1,7 @@
 pub mod analysis;
 pub mod basic_block;
 pub mod builder;
+pub mod context;
 pub mod exec_engine;
 pub mod ffi;
 pub mod module;
@@ -10,7 +11,9 @@ pub mod types;
 pub mod value;
 
 pub use analysis::VerifierFailureAction;
+pub use basic_block::BasicBlock;
 pub use builder::{Builder, RealPredicate};
+pub use context::Context;
 pub use exec_engine::{ExecutionEngine, FunctionAddress, link_mcjit};
 pub use module::Module;
 pub use pass_manager::FunctionPassManager;
