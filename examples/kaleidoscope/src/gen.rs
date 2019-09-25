@@ -61,7 +61,7 @@ impl Generator {
         })
     }
 
-    fn expr(&self, expr: Expr) -> Result<Value> {
+    fn expr(&mut self, expr: Expr) -> Result<Value> {
         let value =
             match expr {
                 Expr::Number(num) => constant::real(types::double(), num),
@@ -75,7 +75,7 @@ impl Generator {
                     let left = self.expr(*left)?;
                     let right = self.expr(*right)?;
                     match op {
-                        BinaryOp::Plus => self.builder.fadd(left, right, "result"),
+                        BinaryOp::Plus => self.builder.fadd(&left, &right, "result"),
                         BinaryOp::Minus => self.builder.fsub(left, right, "result"),
                         BinaryOp::Times => self.builder.fmul(left, right, "result"),
                         BinaryOp::LessThan => {
@@ -128,7 +128,7 @@ impl Generator {
                     phi.add_incoming(&[(&then_value, &new_then_basic_block), (&else_value, &new_else_basic_block)]);
 
                     self.builder.position_at_end(&start_basic_block);
-                    self.builder.cond_br(condition, then_basic_block, else_basic_block);
+                    self.builder.cond_br(&condition, &then_basic_block, &else_basic_block);
 
                     self.builder.position_at_end(&new_then_basic_block);
                     self.builder.br(&merge_basic_block);
@@ -139,6 +139,52 @@ impl Generator {
                     self.builder.position_at_end(&merge_basic_block);
 
                     phi
+                },
+                Expr::For { body, variable_name, init_value, condition, step } => {
+                    let start_value = self.expr(*init_value)?;
+
+                    let preheader_basic_block = self.builder.get_insert_block();
+                    let function = preheader_basic_block.get_parent();
+                    let loop_basic_block = BasicBlock::append_in_context(&self.context, &function, "loop");
+
+                    self.builder.br(&loop_basic_block);
+
+                    self.builder.position_at_end(&loop_basic_block);
+
+                    let phi = self.builder.phi(types::double(), &variable_name);
+                    phi.add_incoming(&[(&start_value, &preheader_basic_block)]);
+
+                    let old_value = self.values.insert(variable_name.clone(), phi.clone());
+
+                    self.expr(*body)?;
+
+                    let step_value =
+                        match step {
+                            Some(step) => self.expr(*step)?,
+                            None => constant::real(types::double(), 1.0),
+                        };
+
+                    let next_variable = self.builder.fadd(&phi, &step_value, "nextvar");
+
+                    let end_condition = self.expr(*condition)?;
+
+                    let zero = constant::real(types::double(), 0.0);
+                    let end_condition = self.builder.fcmp(RealPredicate::OrderedNotEqual, &end_condition, &zero, "loopcond");
+
+                    let loop_end_basic_block = self.builder.get_insert_block();
+                    let after_basic_block = BasicBlock::append_in_context(&self.context, &function, "afterloop");
+
+                    self.builder.cond_br(&end_condition, &loop_basic_block, &after_basic_block);
+
+                    self.builder.position_at_end(&after_basic_block);
+
+                    phi.add_incoming(&[(&next_variable, &loop_end_basic_block)]);
+
+                    if let Some(old_value) = old_value {
+                         self.values.insert(variable_name, old_value);
+                    }
+
+                    constant::null(types::double())
                 },
                 _ => unimplemented!("{:?}", expr),
             };

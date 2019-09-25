@@ -105,13 +105,13 @@ impl Builder {
         }
     }
 
-    pub fn cond_br(&self, if_: Value, then: BasicBlock, else_block: BasicBlock) -> Value {
+    pub fn cond_br(&self, if_: &Value, then: &BasicBlock, else_block: &BasicBlock) -> Value {
         unsafe {
             Value::from_raw(LLVMBuildCondBr(self.as_raw(), if_.as_raw(), then.as_raw(), else_block.as_raw()))
         }
     }
 
-    pub fn fadd(&self, op1: Value, op2: Value, name: &str) -> Value {
+    pub fn fadd(&self, op1: &Value, op2: &Value, name: &str) -> Value {
         let cstring = CString::new(name).expect("cstring");
         unsafe {
             Value::from_raw(LLVMBuildFAdd(self.as_raw(), op1.as_raw(), op2.as_raw(), cstring.as_ptr()))

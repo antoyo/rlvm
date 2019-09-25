@@ -103,4 +103,5 @@ extern "C" {
     pub fn LLVMBuildBr(builder: LLVMBuilderRef, Dest: LLVMBasicBlockRef) -> LLVMValueRef;
     pub fn LLVMBuildPhi(builder: LLVMBuilderRef, Ty: LLVMTypeRef, Name: *const c_char) -> LLVMValueRef;
     pub fn LLVMAddIncoming(PhiNode: LLVMValueRef, IncomingValues: *mut LLVMValueRef, IncomingBlocks: *mut LLVMBasicBlockRef, Count: c_uint);
+    pub fn LLVMConstNull(Ty: LLVMTypeRef) -> LLVMValueRef;
 }
