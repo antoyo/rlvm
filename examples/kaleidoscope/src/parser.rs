@@ -181,7 +181,7 @@ impl<R: Read> Parser<R> {
     fn precedence(&self, op: BinaryOp) -> Result<i32> {
         match self.bin_precedence.get(&op) {
             Some(&precedence) => Ok(precedence),
-            None => Err(Undefined("operator")),
+            None => Err(Undefined(format!("operator {:?}", op))),
         }
     }
 

@@ -45,7 +45,7 @@ pub struct Function {
     pub body: Expr,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Prototype {
     pub function_name: String,
     pub parameters: Vec<String>,

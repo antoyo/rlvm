@@ -68,7 +68,7 @@ impl Generator {
                 Expr::Variable(name) => {
                     match self.values.get(&name) {
                         Some(variable) => variable.clone(),
-                        None => return Err(Undefined("variable")),
+                        None => return Err(Undefined(format!("variable {}", name))),
                     }
                 },
                 Expr::Binary(op, left, right) => {
@@ -81,6 +81,15 @@ impl Generator {
                         BinaryOp::LessThan => {
                             let boolean = self.builder.fcmp(RealPredicate::UnorderedLesserThan, &left, &right, "cmptmp");
                             self.builder.unsigned_int_to_floating_point(boolean, types::double(), "booltemp")
+                        },
+                        BinaryOp::Custom(char) => {
+                            let callee = format!("binary{}", char);
+                            let callee =
+                                match self.get_named_function(&callee) {
+                                    Some(function) => function,
+                                    None => return Err(Undefined(format!("function {}", callee))),
+                                };
+                            self.builder.call(callee, &[left, right], "binop")
                         },
                         _ => unimplemented!(),
                     }
@@ -95,7 +104,7 @@ impl Generator {
                             let arguments = arguments?;
                             self.builder.call(func, &arguments, "func_call")
                         },
-                        None => return Err(Undefined("function")),
+                        None => return Err(Undefined(format!("function {}", name))),
                     }
                 },
                 Expr::If { condition, then, else_ } => {
@@ -186,6 +195,16 @@ impl Generator {
 
                     constant::null(types::double())
                 },
+                Expr::Unary(operator, operand) => {
+                    let operand = self.expr(*operand)?;
+                    let callee = format!("unary{}", operator);
+                    let callee =
+                        match self.get_named_function(&callee) {
+                            Some(function) => function,
+                            None => return Err(Undefined(format!("function {}", callee))),
+                        };
+                    self.builder.call(callee, &[operand], "unop")
+                },
                 _ => unimplemented!("{:?}", expr),
             };
         Ok(value)
@@ -214,8 +233,6 @@ impl Generator {
                 },
             };
 
-        self.function_prototypes.insert(name.clone(), function.prototype);
-
         self.builder.ret(return_value);
         llvm_function.verify(VerifierFailureAction::AbortProcess);
 
@@ -230,13 +247,14 @@ impl Generator {
         Ok((module, name))
     }
 
-    pub fn prototype(&self, prototype: &Prototype) -> Function {
+    pub fn prototype(&mut self, prototype: &Prototype) -> Function {
         let param_types: Vec<_> = iter::repeat(types::double()).take(prototype.parameters.len()).collect();
         let function_type = types::function::new(types::double(), &param_types, false);
         let function = self.add_function(&prototype.function_name, function_type);
         for (index, param) in prototype.parameters.iter().enumerate() {
             function.get_param(index).set_name(param);
         }
+        self.function_prototypes.insert(prototype.function_name.clone(), prototype.clone());
         function
     }
 
@@ -244,12 +262,13 @@ impl Generator {
         self.module.add_function(&name, typ)
     }
 
-    fn get_named_function(&self, name: &str) -> Option<Function> {
+    fn get_named_function(&mut self, name: &str) -> Option<Function> {
         match self.module.get_named_function(&name) {
             Some(function) => Some(function),
             None => {
-                if let Some(prototype) = self.function_prototypes.get(name) {
-                    Some(self.prototype(prototype))
+                // If it's not in the current module, fetch it from other modules.
+                if let Some(prototype) = self.function_prototypes.get(name).map(Clone::clone) {
+                    Some(self.prototype(&prototype))
                 }
                 else {
                     None
