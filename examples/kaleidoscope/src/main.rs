@@ -79,7 +79,7 @@ fn main() -> Result<()> {
             },
             Token::Extern => {
                 match parser.extern_().map(|prototype| generator.prototype(&prototype)) {
-                    Ok(_prototype) => println!("Prototype"),
+                    Ok(prototype) => prototype.dump(),
                     Err(error) => {
                         parser.lexer.next_token()?;
                         eprintln!("Error: {:?}", error);
