@@ -8,6 +8,7 @@ use ffi::{
     LLVMCreateFunctionPassManagerForModule,
     LLVMDisposePassManager,
     LLVMPassManagerRef,
+    LLVMAddPromoteMemoryToRegisterPass,
     LLVMRunFunctionPassManager,
 };
 
@@ -35,6 +36,12 @@ impl FunctionPassManager {
     pub fn add_instruction_combining_pass(&self) {
         unsafe {
             LLVMAddInstructionCombiningPass(self.as_raw());
+        }
+    }
+
+    pub fn add_promote_memory_to_register_pass(&self) {
+        unsafe {
+            LLVMAddPromoteMemoryToRegisterPass(self.as_raw());
         }
     }
 

@@ -4,6 +4,7 @@ use Context;
 use basic_block::BasicBlock;
 use ffi::{
     LLVMBuildAdd,
+    LLVMBuildAlloca,
     LLVMBuildBr,
     LLVMBuildCall,
     LLVMBuildCondBr,
@@ -11,14 +12,17 @@ use ffi::{
     LLVMBuildFCmp,
     LLVMBuildFMul,
     LLVMBuildFSub,
+    LLVMBuildLoad2,
     LLVMBuildPhi,
     LLVMBuilderRef,
     LLVMBuildRet,
+    LLVMBuildStore,
     LLVMBuildUIToFP,
     LLVMCreateBuilder,
     LLVMCreateBuilderInContext,
     LLVMDisposeBuilder,
     LLVMGetInsertBlock,
+    LLVMPositionBuilder,
     LLVMPositionBuilderAtEnd,
     LLVMRealPredicate,
 };
@@ -88,6 +92,13 @@ impl Builder {
         }
     }
 
+    pub fn alloca(&self, typ: Type, name: &str) -> Value {
+        let cstring = CString::new(name).expect("cstring");
+        unsafe {
+            Value::from_raw(LLVMBuildAlloca(self.as_raw(), typ.as_raw(), cstring.as_ptr()))
+        }
+    }
+
     pub fn as_raw(&self) -> LLVMBuilderRef {
         self.0
     }
@@ -145,10 +156,23 @@ impl Builder {
         }
     }
 
+    pub fn load(&self, typ: Type, value: &Value, name: &str) -> Value {
+        let cstring = CString::new(name).expect("cstring");
+        unsafe {
+            Value::from_raw(LLVMBuildLoad2(self.as_raw(), typ.as_raw(), value.as_raw(), cstring.as_ptr()))
+        }
+    }
+
     pub fn phi(&self, typ: Type, name: &str) -> Value {
         let cstring = CString::new(name).expect("cstring");
         unsafe {
             Value::from_raw(LLVMBuildPhi(self.as_raw(), typ.as_raw(), cstring.as_ptr()))
+        }
+    }
+
+    pub fn position(&self, block: &BasicBlock, instruction: &Value) {
+        unsafe {
+            LLVMPositionBuilder(self.as_raw(), block.as_raw(), instruction.as_raw());
         }
     }
 
@@ -161,6 +185,12 @@ impl Builder {
     pub fn ret(&self, value: Value) -> Value {
         unsafe {
             Value::from_raw(LLVMBuildRet(self.as_raw(), value.as_raw()))
+        }
+    }
+
+    pub fn store(&self, value: &Value, pointer: &Value) -> Value {
+        unsafe {
+            Value::from_raw(LLVMBuildStore(self.as_raw(), value.as_raw(), pointer.as_raw()))
         }
     }
 

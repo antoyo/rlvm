@@ -8,6 +8,7 @@ use ffi::{
     LLVMDeleteFunction,
     LLVMDumpModule,
     LLVMDumpValue,
+    LLVMGetEntryBasicBlock,
     LLVMGetNamedFunction,
     LLVMGetParam,
     LLVMModuleCreateWithName,
@@ -80,6 +81,10 @@ impl Function {
 
     pub fn dump(&self) {
         unsafe { LLVMDumpValue(self.as_raw()); }
+    }
+
+    pub fn get_entry_basic_block(&self) -> BasicBlock {
+        unsafe { BasicBlock::from_raw(LLVMGetEntryBasicBlock(self.as_raw())) }
     }
 
     pub fn get_param(&self, index: usize) -> Value {

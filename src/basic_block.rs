@@ -1,11 +1,12 @@
 use std::ffi::CString;
 
-use Context;
+use {Context, Value};
 use ffi::{
     LLVMAppendBasicBlockInContext,
     LLVMBasicBlockRef,
     LLVMCreateBasicBlockInContext,
     LLVMGetBasicBlockParent,
+    LLVMGetFirstInstruction,
 };
 use module::Function;
 
@@ -28,6 +29,12 @@ impl BasicBlock {
 
     pub fn from_raw(basic_block: LLVMBasicBlockRef) -> Self {
         Self(basic_block)
+    }
+
+    pub fn get_first_instruction(&self) -> Value {
+        unsafe {
+            Value::from_raw(LLVMGetFirstInstruction(self.as_raw()))
+        }
     }
 
     pub fn get_parent(&self) -> Function {

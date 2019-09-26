@@ -9,15 +9,25 @@ use ffi::{
     LLVMDisposeExecutionEngine,
     LLVMDisposeMessage,
     LLVMExecutionEngineRef,
+    LLVMGetExecutionEngineTargetData,
     LLVMGetFunctionAddress,
     LLVMLinkInMCJIT,
     LLVMRemoveModule,
+    LLVMTargetDataRef,
 };
 use module::Module;
 
 pub fn link_mcjit() {
     unsafe {
         LLVMLinkInMCJIT();
+    }
+}
+
+pub struct TargetData(LLVMTargetDataRef);
+
+impl TargetData {
+    fn from_raw(target_data: LLVMTargetDataRef) -> Self {
+        Self(target_data)
     }
 }
 
@@ -64,6 +74,12 @@ impl ExecutionEngine {
         }
         else {
             Some(FunctionAddress(address))
+        }
+    }
+
+    pub fn get_target_data(&self) -> TargetData {
+        unsafe {
+            TargetData::from_raw(LLVMGetExecutionEngineTargetData(self.as_raw()))
         }
     }
 

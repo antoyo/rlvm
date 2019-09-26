@@ -14,6 +14,7 @@ pub type LLVMGenericValueRef = *mut c_void;
 pub type LLVMBool = i32;
 pub type LLVMPassManagerRef = *mut c_void;
 pub type LLVMContextRef = *mut c_void;
+pub type LLVMTargetDataRef = *mut c_void;
 
 #[repr(C)]
 pub enum LLVMVerifierFailureAction {
@@ -104,4 +105,12 @@ extern "C" {
     pub fn LLVMBuildPhi(builder: LLVMBuilderRef, Ty: LLVMTypeRef, Name: *const c_char) -> LLVMValueRef;
     pub fn LLVMAddIncoming(PhiNode: LLVMValueRef, IncomingValues: *mut LLVMValueRef, IncomingBlocks: *mut LLVMBasicBlockRef, Count: c_uint);
     pub fn LLVMConstNull(Ty: LLVMTypeRef) -> LLVMValueRef;
+    pub fn LLVMGetEntryBasicBlock(Fn: LLVMValueRef) -> LLVMBasicBlockRef;
+    pub fn LLVMGetFirstInstruction(BB: LLVMBasicBlockRef) -> LLVMValueRef;
+    pub fn LLVMPositionBuilder(Builder: LLVMBuilderRef, Block: LLVMBasicBlockRef, Instr: LLVMValueRef);
+    pub fn LLVMBuildAlloca(builder: LLVMBuilderRef, Ty:  LLVMTypeRef, Name: *const c_char) ->  LLVMValueRef;
+    pub fn LLVMBuildLoad2(builder: LLVMBuilderRef, Ty: LLVMTypeRef, PointerVal: LLVMValueRef, Name: *const c_char) -> LLVMValueRef;
+    pub fn LLVMBuildStore(builder: LLVMBuilderRef, Val: LLVMValueRef, Ptr: LLVMValueRef) -> LLVMValueRef;
+    pub fn LLVMGetExecutionEngineTargetData(EE: LLVMExecutionEngineRef) -> LLVMTargetDataRef;
+    pub fn LLVMAddPromoteMemoryToRegisterPass(PM: LLVMPassManagerRef);
 }

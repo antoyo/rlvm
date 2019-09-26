@@ -25,6 +25,7 @@ use ast::{
 use error::Result;
 use error::Error::{
     Undefined,
+    Unexpected,
     WrongArgumentCount,
 };
 
@@ -40,6 +41,7 @@ pub struct Generator {
 fn new_module() -> (Module, FunctionPassManager) {
     let module = Module::new_with_name("module");
     let pass_manager = FunctionPassManager::new_for_module(&module);
+    pass_manager.add_promote_memory_to_register_pass();
     pass_manager.add_instruction_combining_pass();
     pass_manager.add_reassociate_pass();
     pass_manager.add_gvn_pass();
@@ -61,17 +63,52 @@ impl Generator {
         })
     }
 
+    fn create_argument_allocas(&mut self, function: &Function, prototype: &Prototype) {
+        for (index, variable_name) in prototype.parameters.iter().enumerate() {
+            let arg = function.get_param(index);
+            let alloca = self.create_entry_block_alloca(function, variable_name);
+            self.builder.store(&arg, &alloca);
+            self.values.insert(variable_name.clone(), alloca);
+        }
+    }
+
+    fn create_entry_block_alloca(&self, function: &Function, variable_name: &str) -> Value {
+        let basic_block = function.get_entry_basic_block();
+        let instruction = basic_block.get_first_instruction();
+        let builder = Builder::new_in_context(&self.context);
+        builder.position(&basic_block, &instruction);
+        builder.alloca(types::double(), variable_name)
+    }
+
     fn expr(&mut self, expr: Expr) -> Result<Value> {
         let value =
             match expr {
                 Expr::Number(num) => constant::real(types::double(), num),
                 Expr::Variable(name) => {
                     match self.values.get(&name) {
-                        Some(variable) => variable.clone(),
+                        Some(value) => self.builder.load(types::double(), value, &name),
                         None => return Err(Undefined(format!("variable {}", name))),
                     }
                 },
                 Expr::Binary(op, left, right) => {
+                    if op == BinaryOp::Equal {
+                        let name =
+                            match *left {
+                                Expr::Variable(ref name) => name,
+                                _ => return Err(Unexpected("token, expecting variable name")),
+                            };
+
+                        let value = self.expr(*right)?;
+                        let variable =
+                            match self.values.get(name) {
+                                Some(value) => value,
+                                None => return Err(Undefined(format!("variable {}", name))),
+                            };
+
+                        self.builder.store(&value, variable);
+
+                        return Ok(value);
+                    }
                     let left = self.expr(*left)?;
                     let right = self.expr(*right)?;
                     match op {
@@ -91,7 +128,7 @@ impl Generator {
                                 };
                             self.builder.call(callee, &[left, right], "binop")
                         },
-                        _ => unimplemented!(),
+                        BinaryOp::Equal => unreachable!(),
                     }
                 },
                 Expr::Call(name, args) => {
@@ -150,20 +187,20 @@ impl Generator {
                     phi
                 },
                 Expr::For { body, variable_name, init_value, condition, step } => {
+                    let function = self.builder.get_insert_block().get_parent();
+                    let alloca = self.create_entry_block_alloca(&function, &variable_name);
+
                     let start_value = self.expr(*init_value)?;
 
-                    let preheader_basic_block = self.builder.get_insert_block();
-                    let function = preheader_basic_block.get_parent();
+                    self.builder.store(&start_value, &alloca);
+
                     let loop_basic_block = BasicBlock::append_in_context(&self.context, &function, "loop");
 
                     self.builder.br(&loop_basic_block);
 
                     self.builder.position_at_end(&loop_basic_block);
 
-                    let phi = self.builder.phi(types::double(), &variable_name);
-                    phi.add_incoming(&[(&start_value, &preheader_basic_block)]);
-
-                    let old_value = self.values.insert(variable_name.clone(), phi.clone());
+                    let old_value = self.values.insert(variable_name.clone(), alloca.clone());
 
                     self.expr(*body)?;
 
@@ -173,21 +210,20 @@ impl Generator {
                             None => constant::real(types::double(), 1.0),
                         };
 
-                    let next_variable = self.builder.fadd(&phi, &step_value, "nextvar");
-
                     let end_condition = self.expr(*condition)?;
+
+                    let current_variable = self.builder.load(types::double(), &alloca, &variable_name);
+                    let next_variable = self.builder.fadd(&current_variable, &step_value, "nextvar");
+                    self.builder.store(&next_variable, &alloca);
 
                     let zero = constant::real(types::double(), 0.0);
                     let end_condition = self.builder.fcmp(RealPredicate::OrderedNotEqual, &end_condition, &zero, "loopcond");
 
-                    let loop_end_basic_block = self.builder.get_insert_block();
                     let after_basic_block = BasicBlock::append_in_context(&self.context, &function, "afterloop");
 
                     self.builder.cond_br(&end_condition, &loop_basic_block, &after_basic_block);
 
                     self.builder.position_at_end(&after_basic_block);
-
-                    phi.add_incoming(&[(&next_variable, &loop_end_basic_block)]);
 
                     if let Some(old_value) = old_value {
                          self.values.insert(variable_name, old_value);
@@ -205,7 +241,36 @@ impl Generator {
                         };
                     self.builder.call(callee, &[operand], "unop")
                 },
-                _ => unimplemented!("{:?}", expr),
+                Expr::VariableDeclaration { body, declarations } => {
+                    let mut old_bindings = vec![];
+
+                    let function = self.builder.get_insert_block().get_parent();
+
+                    for declaration in declarations {
+                        let init_value =
+                            match declaration.init_value {
+                                Some(value) => self.expr(*value)?,
+                                None => constant::real(types::double(), 0.0),
+                            };
+
+                        let alloca = self.create_entry_block_alloca(&function, &declaration.name);
+                        self.builder.store(&init_value, &alloca);
+
+                        if let Some(old_value) = self.values.get(&declaration.name) {
+                            old_bindings.push((declaration.name.clone(), old_value.clone()));
+                        }
+
+                        self.values.insert(declaration.name.clone(), alloca);
+                    }
+
+                    let body_value = self.expr(*body)?;
+
+                    for (variable_name, old_value) in old_bindings {
+                        self.values.insert(variable_name, old_value);
+                    }
+
+                    body_value
+                },
             };
         Ok(value)
     }
@@ -220,9 +285,7 @@ impl Generator {
         let entry = llvm_function.append_basic_block("entry");
         self.builder.position_at_end(&entry);
         self.values.clear();
-        for (index, arg) in function.prototype.parameters.iter().enumerate() {
-            self.values.insert(arg.clone(), llvm_function.get_param(index));
-        }
+        self.create_argument_allocas(&llvm_function, &function.prototype);
 
         let return_value =
             match self.expr(function.body) {
