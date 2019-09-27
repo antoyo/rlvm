@@ -17,7 +17,21 @@ pub use context::Context;
 pub use exec_engine::{ExecutionEngine, FunctionAddress, link_mcjit};
 pub use module::Module;
 pub use pass_manager::FunctionPassManager;
-pub use target::{initialize_native_asm_printer, initialize_native_target};
+pub use target::{
+    CodeGenFileType,
+    CodeGenOptLevel,
+    CodeModel,
+    RelocMode,
+    Target,
+    get_default_target_triple,
+    initialize_all_asm_parsers,
+    initialize_all_asm_printers,
+    initialize_all_target_infos,
+    initialize_all_target_mcs,
+    initialize_all_targets,
+    initialize_native_asm_printer,
+    initialize_native_target,
+};
 pub use value::Value;
 
 use std::cell::Cell;

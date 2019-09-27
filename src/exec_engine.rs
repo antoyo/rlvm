@@ -8,6 +8,7 @@ use ffi::{
     LLVMCreateExecutionEngineForModule,
     LLVMDisposeExecutionEngine,
     LLVMDisposeMessage,
+    LLVMDisposeTargetData,
     LLVMExecutionEngineRef,
     LLVMGetExecutionEngineTargetData,
     LLVMGetFunctionAddress,
@@ -26,8 +27,20 @@ pub fn link_mcjit() {
 pub struct TargetData(LLVMTargetDataRef);
 
 impl TargetData {
-    fn from_raw(target_data: LLVMTargetDataRef) -> Self {
+    pub fn as_raw(&self) -> LLVMTargetDataRef {
+        self.0
+    }
+
+    pub fn from_raw(target_data: LLVMTargetDataRef) -> Self {
         Self(target_data)
+    }
+}
+
+impl Drop for TargetData {
+    fn drop(&mut self) {
+        unsafe {
+            LLVMDisposeTargetData(self.as_raw());
+        }
     }
 }
 

@@ -15,6 +15,14 @@ pub type LLVMBool = i32;
 pub type LLVMPassManagerRef = *mut c_void;
 pub type LLVMContextRef = *mut c_void;
 pub type LLVMTargetDataRef = *mut c_void;
+pub type LLVMTargetRef = *mut c_void;
+pub type LLVMTargetMachineRef = *mut c_void;
+
+#[repr(C)]
+pub enum LLVMCodeGenFileType {
+    LLVMAssemblyFile,
+    LLVMObjectFile
+}
 
 #[repr(C)]
 pub enum LLVMVerifierFailureAction {
@@ -41,6 +49,37 @@ pub enum LLVMRealPredicate {
     LLVMRealULE,
     LLVMRealUNE,
     LLVMRealPredicateTrue,
+}
+
+#[repr(C)]
+pub enum LLVMCodeGenOptLevel {
+    LLVMCodeGenLevelNone,
+    LLVMCodeGenLevelLess,
+    LLVMCodeGenLevelDefault,
+    LLVMCodeGenLevelAggressive
+}
+
+#[repr(C)]
+#[allow(non_camel_case_types)]
+pub enum LLVMRelocMode {
+    LLVMRelocDefault,
+    LLVMRelocStatic,
+    LLVMRelocPIC,
+    LLVMRelocDynamicNoPic,
+    LLVMRelocROPI,
+    LLVMRelocRWPI,
+    LLVMRelocROPI_RWPI
+}
+
+#[repr(C)]
+pub enum LLVMCodeModel {
+    LLVMCodeModelDefault,
+    LLVMCodeModelJITDefault,
+    LLVMCodeModelTiny,
+    LLVMCodeModelSmall,
+    LLVMCodeModelKernel,
+    LLVMCodeModelMedium,
+    LLVMCodeModelLarge
 }
 
 #[link(name="LLVM-8")]
@@ -113,4 +152,20 @@ extern "C" {
     pub fn LLVMBuildStore(builder: LLVMBuilderRef, Val: LLVMValueRef, Ptr: LLVMValueRef) -> LLVMValueRef;
     pub fn LLVMGetExecutionEngineTargetData(EE: LLVMExecutionEngineRef) -> LLVMTargetDataRef;
     pub fn LLVMAddPromoteMemoryToRegisterPass(PM: LLVMPassManagerRef);
+    pub fn LLVMGetDefaultTargetTriple() -> *mut c_char;
+    pub fn LLVM_InitializeAllTargetInfos();
+    pub fn LLVM_InitializeAllTargets();
+    pub fn LLVM_InitializeAllTargetMCs();
+    pub fn LLVM_InitializeAllAsmParsers();
+    pub fn LLVM_InitializeAllAsmPrinters();
+    pub fn LLVMSetTarget(M: LLVMModuleRef, Triple: *const c_char);
+    pub fn LLVMCreateTargetMachine(T: LLVMTargetRef, Triple: *const c_char, CPU: *const c_char, Features: *const c_char, Level: LLVMCodeGenOptLevel, Reloc: LLVMRelocMode, CodeModel: LLVMCodeModel) -> LLVMTargetMachineRef;
+    pub fn LLVMGetTargetFromName(Name: *const c_char) -> LLVMTargetRef;
+    pub fn LLVMSetDataLayout(M: LLVMModuleRef, DataLayoutStr: *const c_char);
+    pub fn LLVMCreateTargetDataLayout(T: LLVMTargetMachineRef) -> LLVMTargetDataRef;
+    pub fn LLVMTargetMachineEmitToFile(T: LLVMTargetMachineRef, M: LLVMModuleRef, Filename: *mut c_char, codegen: LLVMCodeGenFileType, ErrorMessage: *mut *mut c_char) -> LLVMBool;
+    pub fn LLVMGetTargetFromTriple(Triple: *const c_char, T: *mut LLVMTargetRef, ErrorMessage: *mut *mut c_char) -> LLVMBool;
+    pub fn LLVMDisposeTargetMachine(T: LLVMTargetMachineRef);
+    pub fn LLVMDisposeTargetData(TD: LLVMTargetDataRef);
+    pub fn LLVMContextDispose(C: LLVMContextRef);
 }

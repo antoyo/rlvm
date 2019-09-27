@@ -1,3 +1,8 @@
+/*
+ * Compile the object file with tests/main.c with:
+ * gcc tests/main.c output.o -o main
+ */
+
 extern crate rlvm;
 
 mod ast;
@@ -10,11 +15,20 @@ mod parser;
 use std::io::{Write, stdin, stdout};
 
 use rlvm::{
-    ExecutionEngine,
+    CodeGenFileType,
+    CodeGenOptLevel,
+    CodeModel,
+    FunctionPassManager,
     Module,
-    initialize_native_asm_printer,
+    RelocMode,
+    Target,
+    get_default_target_triple,
     initialize_native_target,
-    link_mcjit,
+    initialize_all_target_infos,
+    initialize_all_targets,
+    initialize_all_target_mcs,
+    initialize_all_asm_parsers,
+    initialize_all_asm_printers,
     llvm_init
 };
 
@@ -38,17 +52,32 @@ pub extern "C" fn putchard(char: f64) -> f64 {
 fn main() -> Result<()> {
     let _llvm = llvm_init();
 
-    link_mcjit();
-    initialize_native_asm_printer();
+    initialize_all_target_infos();
+    initialize_all_targets();
+    initialize_all_target_mcs();
+    initialize_all_asm_parsers();
+    initialize_all_asm_printers();
     initialize_native_target();
+
+    let target_triple = get_default_target_triple();
+    let target = Target::get_from_triple(&target_triple).expect("get target");
+
+    let target_machine = target.create_target_machine(&target_triple, "generic", "", CodeGenOptLevel::Aggressive, RelocMode::Default, CodeModel::Default);
 
     //let file = File::open("tests/extern.kal")?;
     let file = stdin();
     let lexer = Lexer::new(file);
     let mut parser = Parser::new(lexer);
-    let mut generator = Generator::new().expect("generator");
-    let module = Module::new_with_name("__empty");
-    let engine = ExecutionEngine::new_for_module(&module)?;
+    let module = Module::new_with_name("module");
+    let pass_manager = FunctionPassManager::new_for_module(&module);
+    pass_manager.add_promote_memory_to_register_pass();
+    pass_manager.add_instruction_combining_pass();
+    pass_manager.add_reassociate_pass();
+    pass_manager.add_gvn_pass();
+    pass_manager.add_cfg_simplification_pass();
+    module.set_data_layout(target_machine.create_data_layout());
+    module.set_target(target_triple);
+    let mut generator = Generator::new(module, pass_manager).expect("generator");
     print!("ready> ");
     stdout().flush()?;
     loop {
@@ -68,9 +97,7 @@ fn main() -> Result<()> {
             },
             Token::Def => {
                 match parser.definition().and_then(|definition| generator.function(definition)) {
-                    Ok((module, _)) => {
-                        engine.add_module(&module);
-                    },
+                    Ok(()) => (),
                     Err(error) => {
                         parser.lexer.next_token()?;
                         eprintln!("Error: {:?}", error);
@@ -88,17 +115,7 @@ fn main() -> Result<()> {
             },
             _ => {
                 match parser.toplevel().and_then(|expr| generator.function(expr)) {
-                    Ok((module, function_name)) => {
-                        engine.add_module(&module);
-                        if let Some(function_address) = engine.get_function_address(&function_name) {
-                            let func: fn() -> f64 = unsafe { function_address.cast0_ret() };
-                            println!("Evaluated to {}", func());
-                            engine.remove_module(&module).expect("remove module");
-                        }
-                        else {
-                            panic!("Function not generated");
-                        }
-                    },
+                    Ok(()) => (),
                     Err(error) => {
                         parser.lexer.next_token()?;
                         eprintln!("Error: {:?}", error);
@@ -108,6 +125,10 @@ fn main() -> Result<()> {
         }
         print!("ready> ");
         stdout().flush()?;
+    }
+    println!("Writing output.o");
+    if let Err(error) = target_machine.emit_to_file(&generator.module, "output.o", CodeGenFileType::ObjectFile) {
+        eprintln!("Cannot emit to object: {}", error);
     }
     Ok(())
 }

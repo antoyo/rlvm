@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 use std::iter;
-use std::mem;
 
 use rlvm::{
     BasicBlock,
@@ -31,27 +30,15 @@ use error::Error::{
 
 pub struct Generator {
     builder: Builder,
-    context: Context,
     function_prototypes: HashMap<String, Prototype>,
-    module: Module,
+    pub module: Module,
+    context: Context, // FIXME: the context should be freed after the module. Try to enforce that at the type level.
     pass_manager: FunctionPassManager,
     values: HashMap<String, Value>,
 }
 
-fn new_module() -> (Module, FunctionPassManager) {
-    let module = Module::new_with_name("module");
-    let pass_manager = FunctionPassManager::new_for_module(&module);
-    pass_manager.add_promote_memory_to_register_pass();
-    pass_manager.add_instruction_combining_pass();
-    pass_manager.add_reassociate_pass();
-    pass_manager.add_gvn_pass();
-    pass_manager.add_cfg_simplification_pass();
-    (module, pass_manager)
-}
-
 impl Generator {
-    pub fn new() -> Result<Self> {
-        let (module, pass_manager) = new_module();
+    pub fn new(module: Module, pass_manager: FunctionPassManager) -> Result<Self> {
         let context = Context::new();
         Ok(Self {
             builder: Builder::new_in_context(&context),
@@ -275,7 +262,7 @@ impl Generator {
         Ok(value)
     }
 
-    pub fn function(&mut self, function: ast::Function) -> Result<(Module, String)> {
+    pub fn function(&mut self, function: ast::Function) -> Result<()> {
         let name = function.prototype.function_name.clone();
         let llvm_function =
             match self.module.get_named_function(&name) {
@@ -303,11 +290,7 @@ impl Generator {
 
         self.module.dump();
 
-        let (module, pass_manager) = new_module();
-        let module = mem::replace(&mut self.module, module);
-        self.pass_manager = pass_manager;
-
-        Ok((module, name))
+        Ok(())
     }
 
     pub fn prototype(&mut self, prototype: &Prototype) -> Function {

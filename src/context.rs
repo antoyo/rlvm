@@ -1,5 +1,6 @@
 use ffi::{
     LLVMContextCreate,
+    LLVMContextDispose,
     LLVMContextRef,
 };
 
@@ -14,5 +15,13 @@ impl Context {
 
     pub fn as_raw(&self) -> LLVMContextRef {
         self.0
+    }
+}
+
+impl Drop for Context {
+    fn drop(&mut self) {
+        unsafe {
+            LLVMContextDispose(self.as_raw());
+        }
     }
 }

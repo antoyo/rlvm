@@ -1,11 +1,13 @@
 use std::ffi::CString;
 
 use basic_block::BasicBlock;
+use exec_engine::TargetData;
 use ffi::{
     LLVMAddFunction,
     LLVMAppendBasicBlock,
     LLVMCountParams,
     LLVMDeleteFunction,
+    LLVMDisposeModule,
     LLVMDumpModule,
     LLVMDumpValue,
     LLVMGetEntryBasicBlock,
@@ -13,9 +15,12 @@ use ffi::{
     LLVMGetParam,
     LLVMModuleCreateWithName,
     LLVMModuleRef,
+    LLVMSetDataLayout,
+    LLVMSetTarget,
     LLVMValueRef,
     LLVMVerifyFunction,
 };
+use target::TargetTriple;
 use types::Type;
 use value::Value;
 use VerifierFailureAction;
@@ -53,6 +58,26 @@ impl Module {
             else {
                 Some(Function(value))
             }
+        }
+    }
+
+    pub fn set_data_layout(&self, data_layout: TargetData) {
+        unsafe {
+            LLVMSetDataLayout(self.as_raw(), data_layout.as_raw() as *const _);
+        }
+    }
+
+    pub fn set_target(&self, target: TargetTriple) {
+        unsafe {
+            LLVMSetTarget(self.as_raw(), target.as_raw())
+        }
+    }
+}
+
+impl Drop for Module {
+    fn drop(&mut self) {
+        unsafe {
+            LLVMDisposeModule(self.as_raw());
         }
     }
 }
