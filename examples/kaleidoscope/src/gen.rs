@@ -30,16 +30,15 @@ use error::Error::{
 
 pub struct Generator {
     builder: Builder,
+    context: Context,
     function_prototypes: HashMap<String, Prototype>,
     pub module: Module,
-    context: Context, // FIXME: the context should be freed after the module. Try to enforce that at the type level.
     pass_manager: FunctionPassManager,
     values: HashMap<String, Value>,
 }
 
 impl Generator {
-    pub fn new(module: Module, pass_manager: FunctionPassManager) -> Result<Self> {
-        let context = Context::new();
+    pub fn new(context: Context, module: Module, pass_manager: FunctionPassManager) -> Result<Self> {
         Ok(Self {
             builder: Builder::new_in_context(&context),
             context,
@@ -64,16 +63,16 @@ impl Generator {
         let instruction = basic_block.get_first_instruction();
         let builder = Builder::new_in_context(&self.context);
         builder.position(&basic_block, &instruction);
-        builder.alloca(types::double(), variable_name)
+        builder.alloca(self.context.double(), variable_name)
     }
 
     fn expr(&mut self, expr: Expr) -> Result<Value> {
         let value =
             match expr {
-                Expr::Number(num) => constant::real(types::double(), num),
+                Expr::Number(num) => constant::real(self.context.double(), num),
                 Expr::Variable(name) => {
                     match self.values.get(&name) {
-                        Some(value) => self.builder.load(types::double(), value, &name),
+                        Some(value) => self.builder.load(self.context.double(), value, &name),
                         None => return Err(Undefined(format!("variable {}", name))),
                     }
                 },
@@ -104,7 +103,7 @@ impl Generator {
                         BinaryOp::Times => self.builder.fmul(left, right, "result"),
                         BinaryOp::LessThan => {
                             let boolean = self.builder.fcmp(RealPredicate::UnorderedLesserThan, &left, &right, "cmptmp");
-                            self.builder.unsigned_int_to_floating_point(boolean, types::double(), "booltemp")
+                            self.builder.unsigned_int_to_floating_point(boolean, self.context.double(), "booltemp")
                         },
                         BinaryOp::Custom(char) => {
                             let callee = format!("binary{}", char);
@@ -133,7 +132,7 @@ impl Generator {
                 },
                 Expr::If { condition, then, else_ } => {
                     let condition = self.expr(*condition)?;
-                    let condition = self.builder.fcmp(RealPredicate::OrderedNotEqual, &condition, &constant::real(types::double(), 0.0), "ifcond");
+                    let condition = self.builder.fcmp(RealPredicate::OrderedNotEqual, &condition, &constant::real(self.context.double(), 0.0), "ifcond");
 
                     let start_basic_block = self.builder.get_insert_block();
 
@@ -157,7 +156,7 @@ impl Generator {
                     let merge_basic_block = BasicBlock::append_in_context(&self.context, &function, "ifcont");
                     self.builder.position_at_end(&merge_basic_block);
 
-                    let phi = self.builder.phi(types::double(), "result");
+                    let phi = self.builder.phi(self.context.double(), "result");
                     phi.add_incoming(&[(&then_value, &new_then_basic_block), (&else_value, &new_else_basic_block)]);
 
                     self.builder.position_at_end(&start_basic_block);
@@ -194,16 +193,16 @@ impl Generator {
                     let step_value =
                         match step {
                             Some(step) => self.expr(*step)?,
-                            None => constant::real(types::double(), 1.0),
+                            None => constant::real(self.context.double(), 1.0),
                         };
 
                     let end_condition = self.expr(*condition)?;
 
-                    let current_variable = self.builder.load(types::double(), &alloca, &variable_name);
+                    let current_variable = self.builder.load(self.context.double(), &alloca, &variable_name);
                     let next_variable = self.builder.fadd(&current_variable, &step_value, "nextvar");
                     self.builder.store(&next_variable, &alloca);
 
-                    let zero = constant::real(types::double(), 0.0);
+                    let zero = constant::real(self.context.double(), 0.0);
                     let end_condition = self.builder.fcmp(RealPredicate::OrderedNotEqual, &end_condition, &zero, "loopcond");
 
                     let after_basic_block = BasicBlock::append_in_context(&self.context, &function, "afterloop");
@@ -216,7 +215,7 @@ impl Generator {
                          self.values.insert(variable_name, old_value);
                     }
 
-                    constant::null(types::double())
+                    constant::null(self.context.double())
                 },
                 Expr::Unary(operator, operand) => {
                     let operand = self.expr(*operand)?;
@@ -237,7 +236,7 @@ impl Generator {
                         let init_value =
                             match declaration.init_value {
                                 Some(value) => self.expr(*value)?,
-                                None => constant::real(types::double(), 0.0),
+                                None => constant::real(self.context.double(), 0.0),
                             };
 
                         let alloca = self.create_entry_block_alloca(&function, &declaration.name);
@@ -294,8 +293,8 @@ impl Generator {
     }
 
     pub fn prototype(&mut self, prototype: &Prototype) -> Function {
-        let param_types: Vec<_> = iter::repeat(types::double()).take(prototype.parameters.len()).collect();
-        let function_type = types::function::new(types::double(), &param_types, false);
+        let param_types: Vec<_> = iter::repeat(self.context.double()).take(prototype.parameters.len()).collect();
+        let function_type = types::function::new(self.context.double(), &param_types, false);
         let function = self.add_function(&prototype.function_name, function_type);
         for (index, param) in prototype.parameters.iter().enumerate() {
             function.get_param(index).set_name(param);

@@ -18,8 +18,8 @@ use rlvm::{
     CodeGenFileType,
     CodeGenOptLevel,
     CodeModel,
+    Context,
     FunctionPassManager,
-    Module,
     RelocMode,
     Target,
     get_default_target_triple,
@@ -68,7 +68,8 @@ fn main() -> Result<()> {
     let file = stdin();
     let lexer = Lexer::new(file);
     let mut parser = Parser::new(lexer);
-    let module = Module::new_with_name("module");
+    let context = Context::new();
+    let module = context.new_module("module");
     let pass_manager = FunctionPassManager::new_for_module(&module);
     pass_manager.add_promote_memory_to_register_pass();
     pass_manager.add_instruction_combining_pass();
@@ -77,7 +78,7 @@ fn main() -> Result<()> {
     pass_manager.add_cfg_simplification_pass();
     module.set_data_layout(target_machine.create_data_layout());
     module.set_target(target_triple);
-    let mut generator = Generator::new(module, pass_manager).expect("generator");
+    let mut generator = Generator::new(context, module, pass_manager).expect("generator");
     print!("ready> ");
     stdout().flush()?;
     loop {

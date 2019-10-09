@@ -1,5 +1,6 @@
 use std::ffi::CString;
 
+use Context;
 use basic_block::BasicBlock;
 use exec_engine::TargetData;
 use ffi::{
@@ -7,13 +8,12 @@ use ffi::{
     LLVMAppendBasicBlock,
     LLVMCountParams,
     LLVMDeleteFunction,
-    LLVMDisposeModule,
     LLVMDumpModule,
     LLVMDumpValue,
     LLVMGetEntryBasicBlock,
     LLVMGetNamedFunction,
     LLVMGetParam,
-    LLVMModuleCreateWithName,
+    LLVMModuleCreateWithNameInContext,
     LLVMModuleRef,
     LLVMSetDataLayout,
     LLVMSetTarget,
@@ -28,10 +28,20 @@ use VerifierFailureAction;
 pub struct Module(LLVMModuleRef);
 
 impl Module {
-    pub fn new_with_name(name: &str) -> Self {
+    /*pub fn new_with_name(name: &str) -> Self {
         let cstring = CString::new(name).expect("cstring");
         let module = unsafe { LLVMModuleCreateWithName(cstring.as_ptr()) };
-        Self(module)
+        Self {
+            module,
+            _marker: PhantomData,
+        }
+    }*/
+
+    pub(crate) fn new_with_name_in_context(name: &str, context: &Context) -> Self {
+        let cstring = CString::new(name).expect("cstring");
+        unsafe {
+            Self(LLVMModuleCreateWithNameInContext(cstring.as_ptr(), context.as_raw()))
+        }
     }
 
     pub fn add_function(&self, name: &str, function_type: Type) -> Function {
@@ -74,13 +84,14 @@ impl Module {
     }
 }
 
-impl Drop for Module {
+/*impl Drop for Module {
     fn drop(&mut self) {
+        println!("Drop module");
         unsafe {
             LLVMDisposeModule(self.as_raw());
         }
     }
-}
+}*/
 
 pub struct Function(LLVMValueRef);
 

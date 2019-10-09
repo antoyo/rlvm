@@ -37,6 +37,7 @@ impl Module {
                 Err(verify_error)
             }
             else {
+                LLVMDisposeMessage(error);
                 Ok(())
             }
         }

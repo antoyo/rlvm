@@ -1,7 +1,9 @@
 extern crate rlvm;
 
 use rlvm::{
+    BasicBlock,
     Builder,
+    Context,
     ExecutionEngine,
     Module,
     VerifierFailureAction,
@@ -19,16 +21,17 @@ fn main() {
     initialize_native_asm_printer();
     initialize_native_target();
 
-    let module = Module::new_with_name("module");
+    let context = Context::new();
+    let module = context.new_module("module");
     let engine = ExecutionEngine::new_for_module(&module).expect("failed to create execution engine");
-    let param_types = [types::int32(), types::int32()];
-    let function_type = types::function::new(types::int32(), &param_types, false);
+    let param_types = [context.int32(), context.int32()];
+    let function_type = types::function::new(context.int32(), &param_types, false);
     let sum = module.add_function("sum", function_type);
 
-    let entry = sum.append_basic_block("entry");
+    let entry = BasicBlock::append_in_context(&context, &sum, "entry");
 
-    let builder = Builder::new();
-    builder.position_at_end(entry);
+    let builder = Builder::new_in_context(&context);
+    builder.position_at_end(&entry);
 
     let temp = builder.add(sum.get_param(0), sum.get_param(1), "temp");
     builder.ret(temp);

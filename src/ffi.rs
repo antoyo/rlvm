@@ -95,6 +95,7 @@ extern "C" {
     pub fn LLVMBuildRet(builder: LLVMBuilderRef, V: LLVMValueRef) -> LLVMValueRef;
     pub fn LLVMGetParam(Fn: LLVMValueRef, Index: u32) -> LLVMValueRef;
     pub fn LLVMVerifyModule(M: LLVMModuleRef, Action: LLVMVerifierFailureAction, OutMessage: *mut *mut c_char) -> LLVMBool;
+    // Ownership: dispose the message.
     pub fn LLVMDisposeMessage(Message: *mut c_char);
     pub fn LLVMLinkInMCJIT();
     pub fn LLVM_InitializeNativeTarget() -> LLVMBool;
@@ -105,6 +106,8 @@ extern "C" {
     pub fn LLVMGetFunctionAddress(EE: LLVMExecutionEngineRef, Name: *const c_char) -> u64;
     pub fn LLVMDisposeBuilder(Builder: LLVMBuilderRef);
     pub fn LLVMDisposeExecutionEngine(EE: LLVMExecutionEngineRef);
+    // Ownership: remove itself from the context, delete the globals, the functions, the aliases
+    // and metadata.
     pub fn LLVMDisposeModule(M: LLVMModuleRef);
     pub fn LLVMRemoveModule(EE: LLVMExecutionEngineRef, M: LLVMModuleRef, OutMod: *mut LLVMModuleRef, OutError: *mut *mut c_char) -> LLVMBool;
     pub fn LLVMShutdown();
@@ -167,5 +170,10 @@ extern "C" {
     pub fn LLVMGetTargetFromTriple(Triple: *const c_char, T: *mut LLVMTargetRef, ErrorMessage: *mut *mut c_char) -> LLVMBool;
     pub fn LLVMDisposeTargetMachine(T: LLVMTargetMachineRef);
     pub fn LLVMDisposeTargetData(TD: LLVMTargetDataRef);
+    // Ownership: dispose the modules.
     pub fn LLVMContextDispose(C: LLVMContextRef);
+    pub fn LLVMModuleCreateWithNameInContext(ModuleID: *const c_char, C: LLVMContextRef) -> LLVMModuleRef;
+    pub fn LLVMIntTypeInContext(C: LLVMContextRef, NumBits: c_uint) -> LLVMTypeRef;
+    pub fn LLVMInt32TypeInContext(C: LLVMContextRef) -> LLVMTypeRef;
+    pub fn LLVMDoubleTypeInContext(C: LLVMContextRef) -> LLVMTypeRef;
 }
