@@ -13,6 +13,7 @@ use ffi::{
     LLVMGetEntryBasicBlock,
     LLVMGetNamedFunction,
     LLVMGetParam,
+    LLVMModuleCreateWithName,
     LLVMModuleCreateWithNameInContext,
     LLVMModuleRef,
     LLVMSetDataLayout,
@@ -28,14 +29,11 @@ use VerifierFailureAction;
 pub struct Module(LLVMModuleRef);
 
 impl Module {
-    /*pub fn new_with_name(name: &str) -> Self {
+    pub fn new_with_name(name: &str) -> Self {
         let cstring = CString::new(name).expect("cstring");
         let module = unsafe { LLVMModuleCreateWithName(cstring.as_ptr()) };
-        Self {
-            module,
-            _marker: PhantomData,
-        }
-    }*/
+        Self(module)
+    }
 
     pub(crate) fn new_with_name_in_context(name: &str, context: &Context) -> Self {
         let cstring = CString::new(name).expect("cstring");
@@ -83,15 +81,6 @@ impl Module {
         }
     }
 }
-
-/*impl Drop for Module {
-    fn drop(&mut self) {
-        println!("Drop module");
-        unsafe {
-            LLVMDisposeModule(self.as_raw());
-        }
-    }
-}*/
 
 pub struct Function(LLVMValueRef);
 

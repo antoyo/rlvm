@@ -2,6 +2,7 @@ use std::ffi::CString;
 
 use {Context, Value};
 use ffi::{
+    LLVMAppendBasicBlock,
     LLVMAppendBasicBlockInContext,
     LLVMBasicBlockRef,
     LLVMCreateBasicBlockInContext,
@@ -13,6 +14,13 @@ use module::Function;
 pub struct BasicBlock(LLVMBasicBlockRef);
 
 impl BasicBlock {
+    pub fn append(function: &Function, name: &str) -> Self {
+        let cstring = CString::new(name).expect("cstring");
+        unsafe {
+            Self(LLVMAppendBasicBlock(function.as_raw(), cstring.as_ptr()))
+        }
+    }
+
     pub fn append_in_context(context: &Context, function: &Function, name: &str) -> Self {
         let cstring = CString::new(name).expect("cstring");
         unsafe {

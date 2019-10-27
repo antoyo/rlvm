@@ -25,7 +25,6 @@ impl Context {
 
 impl Drop for Context {
     fn drop(&mut self) {
-        println!("Drop context");
         unsafe {
             LLVMContextDispose(self.as_raw());
         }
