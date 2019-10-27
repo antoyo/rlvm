@@ -1,6 +1,8 @@
+pub mod array;
 pub mod float;
 pub mod function;
 pub mod integer;
+pub mod pointer;
 
 use ffi::LLVMTypeRef;
 

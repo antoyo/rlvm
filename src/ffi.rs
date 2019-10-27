@@ -85,6 +85,7 @@ pub enum LLVMCodeModel {
 #[link(name="LLVM-9")]
 extern "C" {
     pub fn LLVMModuleCreateWithName(ModuleID: *const c_char) -> LLVMModuleRef;
+    pub fn LLVMInt8Type() -> LLVMTypeRef;
     pub fn LLVMInt32Type() -> LLVMTypeRef;
     pub fn LLVMFunctionType(ReturnType: LLVMTypeRef, ParamTypes: *mut LLVMTypeRef, ParamCount: u32, IsVarArg: LLVMBool) -> LLVMTypeRef;
     pub fn LLVMAddFunction(M: LLVMModuleRef, Name: *const c_char, FunctionTy: LLVMTypeRef) -> LLVMValueRef;
@@ -176,4 +177,10 @@ extern "C" {
     pub fn LLVMIntTypeInContext(C: LLVMContextRef, NumBits: c_uint) -> LLVMTypeRef;
     pub fn LLVMInt32TypeInContext(C: LLVMContextRef) -> LLVMTypeRef;
     pub fn LLVMDoubleTypeInContext(C: LLVMContextRef) -> LLVMTypeRef;
+    pub fn LLVMConstString(Str: *const c_char, Length: u32, DontNullTerminate: LLVMBool) -> LLVMValueRef;
+    pub fn LLVMArrayType(ElementType: LLVMTypeRef, ElementCount: u32) -> LLVMTypeRef;
+    pub fn LLVMPointerType(ElementType: LLVMTypeRef, AddressSpace: u32) -> LLVMTypeRef;
+    pub fn LLVMBuildBitCast(builder: LLVMBuilderRef, Val: LLVMValueRef, DestTy: LLVMTypeRef, Name: *const c_char) -> LLVMValueRef;
+    pub fn LLVMBuildGEP(B: LLVMBuilderRef, Pointer: LLVMValueRef, Indices: *mut LLVMValueRef, NumIndices: u32, Name: *const c_char) -> LLVMValueRef;
+    pub fn LLVMBuildGlobalStringPtr(B: LLVMBuilderRef, Str: *const c_char, Name: *const c_char) -> LLVMValueRef;
 }

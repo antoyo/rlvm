@@ -5,6 +5,7 @@ use basic_block::BasicBlock;
 use ffi::{
     LLVMBuildAdd,
     LLVMBuildAlloca,
+    LLVMBuildBitCast,
     LLVMBuildBr,
     LLVMBuildCall,
     LLVMBuildCondBr,
@@ -12,6 +13,7 @@ use ffi::{
     LLVMBuildFCmp,
     LLVMBuildFMul,
     LLVMBuildFSub,
+    LLVMBuildGlobalStringPtr,
     LLVMBuildLoad2,
     LLVMBuildPhi,
     LLVMBuilderRef,
@@ -103,6 +105,13 @@ impl Builder {
         self.0
     }
 
+    pub fn bitcast(&self, value: Value, dest_type: Type, name: &str) -> Value {
+        let cstring = CString::new(name).expect("cstring");
+        unsafe {
+            Value::from_raw(LLVMBuildBitCast(self.as_raw(), value.as_raw(), dest_type.as_raw(), cstring.as_ptr()))
+        }
+    }
+
     pub fn br(&self, basic_block: &BasicBlock) -> Value {
         unsafe {
             Value::from_raw(LLVMBuildBr(self.as_raw(), basic_block.as_raw()))
@@ -153,6 +162,14 @@ impl Builder {
     pub fn get_insert_block(&self) -> BasicBlock {
         unsafe {
             BasicBlock::from_raw(LLVMGetInsertBlock(self.as_raw()))
+        }
+    }
+
+    pub fn global_string_ptr(&self, string: &str, name: &str) -> Value {
+        let string = CString::new(string).expect("cstring");
+        let name = CString::new(name).expect("cstring");
+        unsafe {
+            Value::from_raw(LLVMBuildGlobalStringPtr(self.as_raw(), string.as_ptr(), name.as_ptr()))
         }
     }
 

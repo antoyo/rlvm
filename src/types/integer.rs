@@ -2,8 +2,15 @@ use Context;
 use ffi::{
     LLVMInt32Type,
     LLVMInt32TypeInContext,
+    LLVMInt8Type,
 };
 use super::Type;
+
+pub fn int8() -> Type {
+    unsafe {
+        Type(LLVMInt8Type())
+    }
+}
 
 pub fn int32() -> Type {
     unsafe {
