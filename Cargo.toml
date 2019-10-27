@@ -2,6 +2,8 @@
 name = "rlvm"
 version = "0.0.1"
 authors = ["Antoni Boucher <bouanto@zoho.com>"]
+description = "LLVM wrapper"
+license = "MIT"
 
 [dependencies]
 
