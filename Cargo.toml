@@ -1,6 +1,6 @@
 [package]
 name = "rlvm"
-version = "0.0.1"
+version = "0.0.2"
 authors = ["Antoni Boucher <bouanto@zoho.com>"]
 description = "LLVM wrapper"
 license = "MIT"

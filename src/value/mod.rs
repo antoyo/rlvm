@@ -9,7 +9,7 @@ use ffi::{
     LLVMValueRef,
 };
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Value(LLVMValueRef);
 
 impl Value {
