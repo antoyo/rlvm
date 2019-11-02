@@ -159,13 +159,18 @@ impl Builder {
         }
     }
 
-    pub fn get_insert_block(&self) -> BasicBlock {
+    pub fn get_insert_block(&self) -> Option<BasicBlock> {
         unsafe {
-            BasicBlock::from_raw(LLVMGetInsertBlock(self.as_raw()))
+            let basic_block = LLVMGetInsertBlock(self.as_raw());
+            if basic_block.is_null() {
+                return None;
+            }
+            Some(BasicBlock::from_raw(basic_block))
         }
     }
 
     pub fn global_string_ptr(&self, string: &str, name: &str) -> Value {
+        assert!(self.get_insert_block().is_some(), "position the builder before creating a global string pointer");
         let string = CString::new(string).expect("cstring");
         let name = CString::new(name).expect("cstring");
         unsafe {

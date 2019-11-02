@@ -134,7 +134,7 @@ impl Generator {
                     let condition = self.expr(*condition)?;
                     let condition = self.builder.fcmp(RealPredicate::OrderedNotEqual, &condition, &constant::real(self.context.double(), 0.0), "ifcond");
 
-                    let start_basic_block = self.builder.get_insert_block();
+                    let start_basic_block = self.builder.get_insert_block().expect("start basic block");
 
                     let function = start_basic_block.get_parent();
 
@@ -144,14 +144,14 @@ impl Generator {
 
                     let then_value = self.expr(*then)?;
 
-                    let new_then_basic_block = self.builder.get_insert_block();
+                    let new_then_basic_block = self.builder.get_insert_block().expect("new then basic block");
 
                     let else_basic_block = BasicBlock::append_in_context(&self.context, &function, "else");
                     self.builder.position_at_end(&else_basic_block);
 
                     let else_value = self.expr(*else_)?;
 
-                    let new_else_basic_block = self.builder.get_insert_block();
+                    let new_else_basic_block = self.builder.get_insert_block().expect("new else basic block");
 
                     let merge_basic_block = BasicBlock::append_in_context(&self.context, &function, "ifcont");
                     self.builder.position_at_end(&merge_basic_block);
@@ -173,7 +173,7 @@ impl Generator {
                     phi
                 },
                 Expr::For { body, variable_name, init_value, condition, step } => {
-                    let function = self.builder.get_insert_block().get_parent();
+                    let function = self.builder.get_insert_block().expect("function basic block").get_parent();
                     let alloca = self.create_entry_block_alloca(&function, &variable_name);
 
                     let start_value = self.expr(*init_value)?;
@@ -230,7 +230,7 @@ impl Generator {
                 Expr::VariableDeclaration { body, declarations } => {
                     let mut old_bindings = vec![];
 
-                    let function = self.builder.get_insert_block().get_parent();
+                    let function = self.builder.get_insert_block().expect("function basic block").get_parent();
 
                     for declaration in declarations {
                         let init_value =
