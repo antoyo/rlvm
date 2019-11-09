@@ -82,6 +82,7 @@ impl Module {
     }
 }
 
+#[derive(Clone)]
 pub struct Function(LLVMValueRef);
 
 impl Function {
