@@ -1,4 +1,5 @@
 use std::ffi::CString;
+use std::ptr;
 
 use Context;
 use basic_block::BasicBlock;
@@ -207,6 +208,12 @@ impl Builder {
     pub fn ret(&self, value: Value) -> Value {
         unsafe {
             Value::from_raw(LLVMBuildRet(self.as_raw(), value.as_raw()))
+        }
+    }
+
+    pub fn ret_no_value(&self) -> Value {
+        unsafe {
+            Value::from_raw(LLVMBuildRet(self.as_raw(), ptr::null_mut()))
         }
     }
 
