@@ -96,6 +96,7 @@ impl Builder {
     }
 
     pub fn alloca(&self, typ: Type, name: &str) -> Value {
+        assert!(self.get_insert_block().is_some(), "position the builder before calling alloca");
         let cstring = CString::new(name).expect("cstring");
         unsafe {
             Value::from_raw(LLVMBuildAlloca(self.as_raw(), typ.as_raw(), cstring.as_ptr()))
