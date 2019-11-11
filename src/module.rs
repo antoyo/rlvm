@@ -6,6 +6,7 @@ use exec_engine::TargetData;
 use ffi::{
     LLVMAddFunction,
     LLVMAppendBasicBlock,
+    LLVMCountBasicBlocks,
     LLVMCountParams,
     LLVMDeleteFunction,
     LLVMDumpModule,
@@ -110,6 +111,7 @@ impl Function {
     }
 
     pub fn get_entry_basic_block(&self) -> BasicBlock {
+        assert!(self.size() > 0);
         unsafe { BasicBlock::from_raw(LLVMGetEntryBasicBlock(self.as_raw())) }
     }
 
@@ -121,6 +123,10 @@ impl Function {
 
     pub fn param_count(&self) -> usize {
         unsafe { LLVMCountParams(self.as_raw()) as usize }
+    }
+
+    pub fn size(&self) -> usize {
+        unsafe { LLVMCountBasicBlocks(self.as_raw()) as usize }
     }
 
     pub fn verify(&self, action: VerifierFailureAction) -> bool {

@@ -1,3 +1,7 @@
+/*
+ * TODO: change from assert to debug_assert?
+ */
+
 pub mod analysis;
 pub mod basic_block;
 pub mod builder;

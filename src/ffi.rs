@@ -184,4 +184,5 @@ extern "C" {
     pub fn LLVMBuildGEP(B: LLVMBuilderRef, Pointer: LLVMValueRef, Indices: *mut LLVMValueRef, NumIndices: u32, Name: *const c_char) -> LLVMValueRef;
     pub fn LLVMBuildGlobalStringPtr(B: LLVMBuilderRef, Str: *const c_char, Name: *const c_char) -> LLVMValueRef;
     pub fn LLVMVoidType() -> LLVMTypeRef;
+    pub fn LLVMCountBasicBlocks(Fn: LLVMValueRef) -> c_uint;
 }
