@@ -111,7 +111,7 @@ impl Function {
     }
 
     pub fn get_entry_basic_block(&self) -> BasicBlock {
-        assert!(self.size() > 0);
+        assert!(self.size() > 0, "no basic block in function");
         unsafe { BasicBlock::from_raw(LLVMGetEntryBasicBlock(self.as_raw())) }
     }
 
