@@ -200,4 +200,5 @@ extern "C" {
     pub fn LLVMVoidType() -> LLVMTypeRef;
     pub fn LLVMCountBasicBlocks(Fn: LLVMValueRef) -> c_uint;
     pub fn LLVMBuildICmp(Builder: LLVMBuilderRef, Op: LLVMIntPredicate, LHS: LLVMValueRef, RHS: LLVMValueRef, Name: *const c_char) -> LLVMValueRef;
+    pub fn LLVMInt1Type() -> LLVMTypeRef;
 }

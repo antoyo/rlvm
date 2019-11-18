@@ -1,10 +1,17 @@
 use Context;
 use ffi::{
+    LLVMInt1Type,
     LLVMInt32Type,
     LLVMInt32TypeInContext,
     LLVMInt8Type,
 };
 use super::Type;
+
+pub fn int1() -> Type {
+    unsafe {
+        Type(LLVMInt1Type())
+    }
+}
 
 pub fn int8() -> Type {
     unsafe {
