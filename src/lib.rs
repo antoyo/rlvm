@@ -16,7 +16,7 @@ pub mod value;
 
 pub use analysis::VerifierFailureAction;
 pub use basic_block::BasicBlock;
-pub use builder::{Builder, RealPredicate};
+pub use builder::{Builder, IntPredicate, RealPredicate};
 pub use context::Context;
 pub use exec_engine::{ExecutionEngine, FunctionAddress, link_mcjit};
 pub use module::Module;
