@@ -15,6 +15,7 @@ use ffi::{
     LLVMBuildFMul,
     LLVMBuildFSub,
     LLVMBuildGlobalStringPtr,
+    LLVMBuildICmp,
     LLVMBuildLoad2,
     LLVMBuildPhi,
     LLVMBuilderRef,
@@ -25,6 +26,7 @@ use ffi::{
     LLVMCreateBuilderInContext,
     LLVMDisposeBuilder,
     LLVMGetInsertBlock,
+    LLVMIntPredicate,
     LLVMPositionBuilder,
     LLVMPositionBuilderAtEnd,
     LLVMRealPredicate,
@@ -32,6 +34,36 @@ use ffi::{
 use module::Function;
 use types::Type;
 use value::Value;
+
+pub enum IntPredicate {
+  Equal,
+  NotEqual,
+  SignedGreaterThan,
+  SignedGreaterThanOrEqual,
+  SignedLesserThan,
+  SignedLesserThanOrEqual,
+  UnsignedGreaterThan,
+  UnsignedGreaterThanOrEqual,
+  UnsignedLesserThan,
+  UnsignedLesserThanOrEqual,
+}
+
+impl IntPredicate {
+    fn as_raw(&self) -> LLVMIntPredicate {
+        match *self {
+            Self::Equal => LLVMIntPredicate::LLVMIntEQ,
+            Self::NotEqual => LLVMIntPredicate::LLVMIntNE,
+            Self::SignedGreaterThan => LLVMIntPredicate::LLVMIntUGT,
+            Self::SignedGreaterThanOrEqual => LLVMIntPredicate::LLVMIntUGE,
+            Self::SignedLesserThan => LLVMIntPredicate::LLVMIntULT,
+            Self::SignedLesserThanOrEqual => LLVMIntPredicate::LLVMIntULE,
+            Self::UnsignedGreaterThan => LLVMIntPredicate::LLVMIntSGT,
+            Self::UnsignedGreaterThanOrEqual => LLVMIntPredicate::LLVMIntSGE,
+            Self::UnsignedLesserThan => LLVMIntPredicate::LLVMIntSLT,
+            Self::UnsignedLesserThanOrEqual => LLVMIntPredicate::LLVMIntSLE,
+        }
+    }
+}
 
 pub enum RealPredicate {
     False,
@@ -144,6 +176,13 @@ impl Builder {
         let cstring = CString::new(name).expect("cstring");
         unsafe {
             Value::from_raw(LLVMBuildFCmp(self.as_raw(), op.as_raw(), op1.as_raw(), op2.as_raw(), cstring.as_ptr()))
+        }
+    }
+
+    pub fn icmp(&self, predicate: IntPredicate, op1: &Value, op2: &Value, name: &str) -> Value {
+        let cstring = CString::new(name).expect("cstring");
+        unsafe {
+            Value::from_raw(LLVMBuildICmp(self.as_raw(), predicate.as_raw(), op1.as_raw(), op2.as_raw(), cstring.as_ptr()))
         }
     }
 

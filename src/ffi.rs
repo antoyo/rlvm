@@ -52,6 +52,20 @@ pub enum LLVMRealPredicate {
 }
 
 #[repr(C)]
+pub enum LLVMIntPredicate {
+  LLVMIntEQ = 32,
+  LLVMIntNE,
+  LLVMIntUGT,
+  LLVMIntUGE,
+  LLVMIntULT,
+  LLVMIntULE,
+  LLVMIntSGT,
+  LLVMIntSGE,
+  LLVMIntSLT,
+  LLVMIntSLE,
+}
+
+#[repr(C)]
 pub enum LLVMCodeGenOptLevel {
     LLVMCodeGenLevelNone,
     LLVMCodeGenLevelLess,
@@ -185,4 +199,5 @@ extern "C" {
     pub fn LLVMBuildGlobalStringPtr(B: LLVMBuilderRef, Str: *const c_char, Name: *const c_char) -> LLVMValueRef;
     pub fn LLVMVoidType() -> LLVMTypeRef;
     pub fn LLVMCountBasicBlocks(Fn: LLVMValueRef) -> c_uint;
+    pub fn LLVMBuildICmp(Builder: LLVMBuilderRef, Op: LLVMIntPredicate, LHS: LLVMValueRef, RHS: LLVMValueRef, Name: *const c_char) -> LLVMValueRef;
 }
