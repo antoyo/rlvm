@@ -31,8 +31,8 @@ fn main() {
     let builder = Builder::new();
     builder.position_at_end(&entry);
 
-    let temp = builder.add(sum.get_param(0), sum.get_param(1), "temp");
-    builder.ret(temp);
+    let temp = builder.add(&sum.get_param(0), &sum.get_param(1), "temp");
+    builder.ret(&temp);
 
     module.verify(VerifierFailureAction::AbortProcess).expect("module verify");
 

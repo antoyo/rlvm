@@ -99,11 +99,11 @@ impl Generator {
                     let right = self.expr(*right)?;
                     match op {
                         BinaryOp::Plus => self.builder.fadd(&left, &right, "result"),
-                        BinaryOp::Minus => self.builder.fsub(left, right, "result"),
-                        BinaryOp::Times => self.builder.fmul(left, right, "result"),
+                        BinaryOp::Minus => self.builder.fsub(&left, &right, "result"),
+                        BinaryOp::Times => self.builder.fmul(&left, &right, "result"),
                         BinaryOp::LessThan => {
                             let boolean = self.builder.fcmp(RealPredicate::UnorderedLesserThan, &left, &right, "cmptmp");
-                            self.builder.unsigned_int_to_floating_point(boolean, self.context.double(), "booltemp")
+                            self.builder.unsigned_int_to_floating_point(&boolean, self.context.double(), "booltemp")
                         },
                         BinaryOp::Custom(char) => {
                             let callee = format!("binary{}", char);
@@ -282,7 +282,7 @@ impl Generator {
                 },
             };
 
-        self.builder.ret(return_value);
+        self.builder.ret(&return_value);
         llvm_function.verify(VerifierFailureAction::AbortProcess);
 
         self.pass_manager.run(&llvm_function);

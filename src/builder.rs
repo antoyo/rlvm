@@ -120,7 +120,7 @@ impl Builder {
         }
     }
 
-    pub fn add(&self, op1: Value, op2: Value, name: &str) -> Value {
+    pub fn add(&self, op1: &Value, op2: &Value, name: &str) -> Value {
         let cstring = CString::new(name).expect("cstring");
         unsafe {
             Value::from_raw(LLVMBuildAdd(self.as_raw(), op1.as_raw(), op2.as_raw(), cstring.as_ptr()))
@@ -139,7 +139,7 @@ impl Builder {
         self.0
     }
 
-    pub fn bitcast(&self, value: Value, dest_type: Type, name: &str) -> Value {
+    pub fn bitcast(&self, value: &Value, dest_type: Type, name: &str) -> Value {
         let cstring = CString::new(name).expect("cstring");
         unsafe {
             Value::from_raw(LLVMBuildBitCast(self.as_raw(), value.as_raw(), dest_type.as_raw(), cstring.as_ptr()))
@@ -186,14 +186,14 @@ impl Builder {
         }
     }
 
-    pub fn fmul(&self, op1: Value, op2: Value, name: &str) -> Value {
+    pub fn fmul(&self, op1: &Value, op2: &Value, name: &str) -> Value {
         let cstring = CString::new(name).expect("cstring");
         unsafe {
             Value::from_raw(LLVMBuildFMul(self.as_raw(), op1.as_raw(), op2.as_raw(), cstring.as_ptr()))
         }
     }
 
-    pub fn fsub(&self, op1: Value, op2: Value, name: &str) -> Value {
+    pub fn fsub(&self, op1: &Value, op2: &Value, name: &str) -> Value {
         let cstring = CString::new(name).expect("cstring");
         unsafe {
             Value::from_raw(LLVMBuildFSub(self.as_raw(), op1.as_raw(), op2.as_raw(), cstring.as_ptr()))
@@ -245,7 +245,7 @@ impl Builder {
         }
     }
 
-    pub fn ret(&self, value: Value) -> Value {
+    pub fn ret(&self, value: &Value) -> Value {
         unsafe {
             Value::from_raw(LLVMBuildRet(self.as_raw(), value.as_raw()))
         }
@@ -263,7 +263,7 @@ impl Builder {
         }
     }
 
-    pub fn unsigned_int_to_floating_point(&self, value: Value, dest_type: Type, name: &str) -> Value {
+    pub fn unsigned_int_to_floating_point(&self, value: &Value, dest_type: Type, name: &str) -> Value {
         let cstring = CString::new(name).expect("cstring");
         unsafe {
             Value::from_raw(LLVMBuildUIToFP(self.as_raw(), value.as_raw(), dest_type.as_raw(), cstring.as_ptr()))
