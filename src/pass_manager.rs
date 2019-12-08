@@ -2,6 +2,7 @@ use Module;
 use module::Function;
 use ffi::{
     LLVMAddCFGSimplificationPass,
+    LLVMAddFunctionInliningPass,
     LLVMAddGVNPass,
     LLVMAddInstructionCombiningPass,
     LLVMAddReassociatePass,
@@ -24,6 +25,12 @@ impl FunctionPassManager {
     pub fn add_cfg_simplification_pass(&self) {
         unsafe {
             LLVMAddCFGSimplificationPass(self.as_raw());
+        }
+    }
+
+    pub fn add_function_inlining_pass(&self) {
+        unsafe {
+            LLVMAddFunctionInliningPass(self.as_raw());
         }
     }
 
