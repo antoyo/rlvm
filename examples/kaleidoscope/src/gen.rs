@@ -7,6 +7,7 @@ use rlvm::{
     Context,
     Module,
     FunctionPassManager,
+    ModulePassManager,
     RealPredicate,
     Value,
     VerifierFailureAction,
@@ -31,20 +32,22 @@ use error::Error::{
 pub struct Generator {
     builder: Builder,
     context: Context,
+    function_pass_manager: FunctionPassManager,
     function_prototypes: HashMap<String, Prototype>,
     pub module: Module,
-    pass_manager: FunctionPassManager,
+    module_pass_manager: ModulePassManager,
     values: HashMap<String, Value>,
 }
 
 impl Generator {
-    pub fn new(context: Context, module: Module, pass_manager: FunctionPassManager) -> Result<Self> {
+    pub fn new(context: Context, module: Module, function_pass_manager: FunctionPassManager, module_pass_manager: ModulePassManager) -> Result<Self> {
         Ok(Self {
             builder: Builder::new_in_context(&context),
             context,
+            function_pass_manager,
             function_prototypes: HashMap::new(),
             module,
-            pass_manager,
+            module_pass_manager,
             values: HashMap::new(),
         })
     }
@@ -285,8 +288,9 @@ impl Generator {
         self.builder.ret(&return_value);
         llvm_function.verify(VerifierFailureAction::AbortProcess);
 
-        self.pass_manager.run(&llvm_function);
+        self.function_pass_manager.run(&llvm_function);
 
+        self.module_pass_manager.run(&self.module);
         self.module.dump();
 
         Ok(())

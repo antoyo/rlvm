@@ -53,16 +53,16 @@ pub enum LLVMRealPredicate {
 
 #[repr(C)]
 pub enum LLVMIntPredicate {
-  LLVMIntEQ = 32,
-  LLVMIntNE,
-  LLVMIntUGT,
-  LLVMIntUGE,
-  LLVMIntULT,
-  LLVMIntULE,
-  LLVMIntSGT,
-  LLVMIntSGE,
-  LLVMIntSLT,
-  LLVMIntSLE,
+    LLVMIntEQ = 32,
+    LLVMIntNE,
+    LLVMIntUGT,
+    LLVMIntUGE,
+    LLVMIntULT,
+    LLVMIntULE,
+    LLVMIntSGT,
+    LLVMIntSGE,
+    LLVMIntSLT,
+    LLVMIntSLE,
 }
 
 #[repr(C)]
@@ -204,4 +204,5 @@ extern "C" {
     pub fn LLVMAddGlobal(M: LLVMModuleRef, Ty: LLVMTypeRef, Name: *const c_char) -> LLVMValueRef;
     pub fn LLVMSetInitializer(GlobalVar: LLVMValueRef, ConstantVal: LLVMValueRef);
     pub fn LLVMAddFunctionInliningPass(PM: LLVMPassManagerRef);
+    pub fn LLVMCreatePassManager() -> LLVMPassManagerRef;
 }

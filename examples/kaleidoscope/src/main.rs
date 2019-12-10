@@ -20,6 +20,7 @@ use rlvm::{
     CodeModel,
     Context,
     FunctionPassManager,
+    ModulePassManager,
     RelocMode,
     Target,
     get_default_target_triple,
@@ -70,15 +71,17 @@ fn main() -> Result<()> {
     let mut parser = Parser::new(lexer);
     let context = Context::new();
     let module = context.new_module("module");
-    let pass_manager = FunctionPassManager::new_for_module(&module);
-    pass_manager.add_promote_memory_to_register_pass();
-    pass_manager.add_instruction_combining_pass();
-    pass_manager.add_reassociate_pass();
-    pass_manager.add_gvn_pass();
-    pass_manager.add_cfg_simplification_pass();
+    let function_pass_manager = FunctionPassManager::new_for_module(&module);
+    function_pass_manager.add_promote_memory_to_register_pass();
+    function_pass_manager.add_instruction_combining_pass();
+    function_pass_manager.add_reassociate_pass();
+    function_pass_manager.add_gvn_pass();
+    function_pass_manager.add_cfg_simplification_pass();
+    let module_pass_manager = ModulePassManager::new();
+    module_pass_manager.add_function_inlining_pass();
     module.set_data_layout(target_machine.create_data_layout());
     module.set_target(target_triple);
-    let mut generator = Generator::new(context, module, pass_manager).expect("generator");
+    let mut generator = Generator::new(context, module, function_pass_manager, module_pass_manager).expect("generator");
     print!("ready> ");
     stdout().flush()?;
     loop {

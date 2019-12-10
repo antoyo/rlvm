@@ -20,7 +20,7 @@ pub use builder::{Builder, IntPredicate, RealPredicate};
 pub use context::Context;
 pub use exec_engine::{ExecutionEngine, FunctionAddress, link_mcjit};
 pub use module::Module;
-pub use pass_manager::FunctionPassManager;
+pub use pass_manager::{FunctionPassManager, ModulePassManager};
 pub use target::{
     CodeGenFileType,
     CodeGenOptLevel,

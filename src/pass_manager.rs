@@ -7,10 +7,12 @@ use ffi::{
     LLVMAddInstructionCombiningPass,
     LLVMAddReassociatePass,
     LLVMCreateFunctionPassManagerForModule,
+    LLVMCreatePassManager,
     LLVMDisposePassManager,
     LLVMPassManagerRef,
     LLVMAddPromoteMemoryToRegisterPass,
     LLVMRunFunctionPassManager,
+    LLVMRunPassManager,
 };
 
 pub struct FunctionPassManager(LLVMPassManagerRef);
@@ -25,12 +27,6 @@ impl FunctionPassManager {
     pub fn add_cfg_simplification_pass(&self) {
         unsafe {
             LLVMAddCFGSimplificationPass(self.as_raw());
-        }
-    }
-
-    pub fn add_function_inlining_pass(&self) {
-        unsafe {
-            LLVMAddFunctionInliningPass(self.as_raw());
         }
     }
 
@@ -70,6 +66,40 @@ impl FunctionPassManager {
 }
 
 impl Drop for FunctionPassManager {
+    fn drop(&mut self) {
+        unsafe {
+            LLVMDisposePassManager(self.as_raw());
+        }
+    }
+}
+
+pub struct ModulePassManager(LLVMPassManagerRef);
+
+impl ModulePassManager {
+    pub fn new() -> Self {
+        unsafe {
+            ModulePassManager(LLVMCreatePassManager())
+        }
+    }
+
+    pub fn add_function_inlining_pass(&self) {
+        unsafe {
+            LLVMAddFunctionInliningPass(self.as_raw());
+        }
+    }
+
+    pub fn as_raw(&self) -> LLVMPassManagerRef {
+        self.0
+    }
+
+    pub fn run(&self, module: &Module) -> bool {
+        unsafe {
+            LLVMRunPassManager(self.as_raw(), module.as_raw()) != 0
+        }
+    }
+}
+
+impl Drop for ModulePassManager {
     fn drop(&mut self) {
         unsafe {
             LLVMDisposePassManager(self.as_raw());
