@@ -271,7 +271,7 @@ impl Generator {
                 Some(llvm_function) => llvm_function,
                 None => self.prototype(&function.prototype),
             };
-        let entry = llvm_function.append_basic_block("entry");
+        let entry = llvm_function.append_basic_block_in_context(&self.context, "entry");
         self.builder.position_at_end(&entry);
         self.values.clear();
         self.create_argument_allocas(&llvm_function, &function.prototype);
@@ -289,6 +289,7 @@ impl Generator {
         llvm_function.verify(VerifierFailureAction::AbortProcess);
 
         self.function_pass_manager.run(&llvm_function);
+        //llvm_function.dump();
 
         self.module_pass_manager.run(&self.module);
         self.module.dump();

@@ -6,6 +6,7 @@ use exec_engine::TargetData;
 use ffi::{
     LLVMAddFunction,
     LLVMAppendBasicBlock,
+    LLVMAppendBasicBlockInContext,
     LLVMCountBasicBlocks,
     LLVMCountParams,
     LLVMDeleteFunction,
@@ -95,6 +96,13 @@ impl Function {
         let cstring = CString::new(block_name).expect("cstring");
         unsafe {
             BasicBlock::from_raw(LLVMAppendBasicBlock(self.as_raw(), cstring.as_ptr()))
+        }
+    }
+
+    pub fn append_basic_block_in_context(&self, context: &Context, block_name: &str) -> BasicBlock {
+        let cstring = CString::new(block_name).expect("cstring");
+        unsafe {
+            BasicBlock::from_raw(LLVMAppendBasicBlockInContext(context.as_raw(), self.as_raw(), cstring.as_ptr()))
         }
     }
 
