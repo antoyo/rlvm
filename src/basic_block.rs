@@ -11,6 +11,7 @@ use ffi::{
 };
 use module::Function;
 
+#[derive(Clone)]
 pub struct BasicBlock(LLVMBasicBlockRef);
 
 impl BasicBlock {
