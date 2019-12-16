@@ -205,4 +205,5 @@ extern "C" {
     pub fn LLVMSetInitializer(GlobalVar: LLVMValueRef, ConstantVal: LLVMValueRef);
     pub fn LLVMAddFunctionInliningPass(PM: LLVMPassManagerRef);
     pub fn LLVMCreatePassManager() -> LLVMPassManagerRef;
+    pub fn LLVMBuildMemMove(B: LLVMBuilderRef, Dst: LLVMValueRef, DstAlign: c_uint, Src: LLVMValueRef, SrcAlign: c_uint, Size: LLVMValueRef) -> LLVMValueRef;
 }

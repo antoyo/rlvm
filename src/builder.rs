@@ -1,4 +1,5 @@
 use std::ffi::CString;
+use std::os::raw::c_uint;
 use std::ptr;
 
 use Context;
@@ -17,6 +18,7 @@ use ffi::{
     LLVMBuildGlobalStringPtr,
     LLVMBuildICmp,
     LLVMBuildLoad2,
+    LLVMBuildMemMove,
     LLVMBuildPhi,
     LLVMBuilderRef,
     LLVMBuildRet,
@@ -223,6 +225,12 @@ impl Builder {
         let cstring = CString::new(name).expect("cstring");
         unsafe {
             Value::from_raw(LLVMBuildLoad2(self.as_raw(), typ.as_raw(), value.as_raw(), cstring.as_ptr()))
+        }
+    }
+
+    pub fn mem_move(&self, dest: &Value, dest_align: usize, src: &Value, src_align: usize, size: &Value) -> Value {
+        unsafe {
+            Value::from_raw(LLVMBuildMemMove(self.as_raw(), dest.as_raw(), dest_align as c_uint, src.as_raw(), src_align as c_uint, size.as_raw()))
         }
     }
 
