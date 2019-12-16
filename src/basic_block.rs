@@ -36,7 +36,7 @@ impl BasicBlock {
         }
     }
 
-    pub fn from_raw(basic_block: LLVMBasicBlockRef) -> Self {
+    pub unsafe fn from_raw(basic_block: LLVMBasicBlockRef) -> Self {
         Self(basic_block)
     }
 

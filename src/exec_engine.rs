@@ -31,7 +31,7 @@ impl TargetData {
         self.0
     }
 
-    pub fn from_raw(target_data: LLVMTargetDataRef) -> Self {
+    pub unsafe fn from_raw(target_data: LLVMTargetDataRef) -> Self {
         Self(target_data)
     }
 }

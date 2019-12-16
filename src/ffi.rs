@@ -206,4 +206,6 @@ extern "C" {
     pub fn LLVMAddFunctionInliningPass(PM: LLVMPassManagerRef);
     pub fn LLVMCreatePassManager() -> LLVMPassManagerRef;
     pub fn LLVMBuildMemMove(B: LLVMBuilderRef, Dst: LLVMValueRef, DstAlign: c_uint, Src: LLVMValueRef, SrcAlign: c_uint, Size: LLVMValueRef) -> LLVMValueRef;
+    pub fn LLVMAlignOf(Ty: LLVMTypeRef) -> LLVMValueRef;
+    pub fn LLVMSizeOf(Ty: LLVMTypeRef) -> LLVMValueRef;
 }

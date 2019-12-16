@@ -73,7 +73,7 @@ impl TargetMachine {
         }
     }
 
-    pub fn from_raw(target_machine: LLVMTargetMachineRef) -> Self {
+    pub unsafe fn from_raw(target_machine: LLVMTargetMachineRef) -> Self {
         Self(target_machine)
     }
 }
@@ -167,7 +167,7 @@ impl Target {
         }
     }
 
-    pub fn from_raw(target: LLVMTargetRef) -> Self {
+    pub unsafe fn from_raw(target: LLVMTargetRef) -> Self {
         Self(target)
     }
 
@@ -207,7 +207,7 @@ impl TargetTriple {
         self.0
     }
 
-    pub fn from_raw(triple: *const c_char) -> TargetTriple {
+    pub unsafe fn from_raw(triple: *const c_char) -> TargetTriple {
         Self(triple)
     }
 }

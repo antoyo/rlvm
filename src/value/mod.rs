@@ -13,7 +13,7 @@ use ffi::{
 pub struct Value(LLVMValueRef);
 
 impl Value {
-    pub(crate) fn from_raw(value_ref: LLVMValueRef) -> Self {
+    pub(crate) unsafe fn from_raw(value_ref: LLVMValueRef) -> Self {
         Value(value_ref)
     }
 

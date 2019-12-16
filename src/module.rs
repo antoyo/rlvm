@@ -88,7 +88,7 @@ impl Module {
 pub struct Function(LLVMValueRef);
 
 impl Function {
-    pub fn from_raw(value: LLVMValueRef) -> Self {
+    pub unsafe fn from_raw(value: LLVMValueRef) -> Self {
         Self(value)
     }
 
