@@ -15,6 +15,7 @@ use ffi::{
     LLVMBuildFCmp,
     LLVMBuildFMul,
     LLVMBuildFSub,
+    LLVMBuildGEP2,
     LLVMBuildGlobalStringPtr,
     LLVMBuildICmp,
     LLVMBuildLoad2,
@@ -200,6 +201,13 @@ impl Builder {
         let cstring = CString::new(name).expect("cstring");
         unsafe {
             Value::from_raw(LLVMBuildFSub(self.as_raw(), op1.as_raw(), op2.as_raw(), cstring.as_ptr()))
+        }
+    }
+
+    pub fn gep(&self, typ: &Type, pointer: &Value, indices: &[Value], name: &str) -> Value {
+        let cstring = CString::new(name).expect("cstring");
+        unsafe {
+            Value::from_raw(LLVMBuildGEP2(self.as_raw(), typ.as_raw(), pointer.as_raw(), indices.as_ptr() as *mut _, indices.len() as u32, cstring.as_ptr()))
         }
     }
 
