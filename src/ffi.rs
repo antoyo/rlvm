@@ -208,4 +208,5 @@ extern "C" {
     pub fn LLVMBuildMemMove(B: LLVMBuilderRef, Dst: LLVMValueRef, DstAlign: c_uint, Src: LLVMValueRef, SrcAlign: c_uint, Size: LLVMValueRef) -> LLVMValueRef;
     pub fn LLVMAlignOf(Ty: LLVMTypeRef) -> LLVMValueRef;
     pub fn LLVMSizeOf(Ty: LLVMTypeRef) -> LLVMValueRef;
+    pub fn LLVMBuildMemSet(B: LLVMBuilderRef, Ptr: LLVMValueRef, Val: LLVMValueRef, Len: LLVMValueRef, Align: c_uint) -> LLVMValueRef;
 }

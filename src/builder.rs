@@ -19,6 +19,7 @@ use ffi::{
     LLVMBuildICmp,
     LLVMBuildLoad2,
     LLVMBuildMemMove,
+    LLVMBuildMemSet,
     LLVMBuildPhi,
     LLVMBuilderRef,
     LLVMBuildRet,
@@ -231,6 +232,12 @@ impl Builder {
     pub fn mem_move(&self, dest: &Value, dest_align: usize, src: &Value, src_align: usize, size: &Value) -> Value {
         unsafe {
             Value::from_raw(LLVMBuildMemMove(self.as_raw(), dest.as_raw(), dest_align as c_uint, src.as_raw(), src_align as c_uint, size.as_raw()))
+        }
+    }
+
+    pub fn mem_set(&self, ptr: &Value, value: &Value, len: &Value, align: usize) -> Value {
+        unsafe {
+            Value::from_raw(LLVMBuildMemSet(self.as_raw(), ptr.as_raw(), value.as_raw(), len.as_raw(), align as c_uint))
         }
     }
 
