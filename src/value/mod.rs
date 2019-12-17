@@ -2,10 +2,11 @@ pub mod constant;
 
 use std::ffi::CString;
 
-use BasicBlock;
+use {BasicBlock, types::Type};
 use ffi::{
     LLVMAddIncoming,
     LLVMSetValueName2,
+    LLVMTypeOf,
     LLVMValueRef,
 };
 
@@ -28,6 +29,12 @@ impl Value {
 
     pub fn as_raw(&self) -> LLVMValueRef {
         self.0
+    }
+
+    pub fn get_type(&self) -> Type {
+        unsafe {
+            Type::from_raw(LLVMTypeOf(self.as_raw()))
+        }
     }
 
     pub fn set_name(&self, name: &str) {

@@ -6,6 +6,7 @@ pub mod pointer;
 
 use ffi::{
     LLVMAlignOf,
+    LLVMDumpType,
     LLVMSizeOf,
     LLVMTypeRef,
     LLVMVoidType,
@@ -21,6 +22,16 @@ pub struct Type(LLVMTypeRef);
 impl Type {
     pub fn as_raw(&self) -> LLVMTypeRef {
         self.0
+    }
+
+    pub fn dump(&self) {
+        unsafe {
+            LLVMDumpType(self.as_raw())
+        }
+    }
+
+    pub unsafe fn from_raw(typ: LLVMTypeRef) -> Self {
+        Type(typ)
     }
 }
 

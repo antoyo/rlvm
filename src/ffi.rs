@@ -210,4 +210,6 @@ extern "C" {
     pub fn LLVMSizeOf(Ty: LLVMTypeRef) -> LLVMValueRef;
     pub fn LLVMBuildMemSet(B: LLVMBuilderRef, Ptr: LLVMValueRef, Val: LLVMValueRef, Len: LLVMValueRef, Align: c_uint) -> LLVMValueRef;
     pub fn LLVMBuildGEP2(B: LLVMBuilderRef, Ty: LLVMTypeRef, Pointer: LLVMValueRef, Indices: *mut LLVMValueRef, NumIndices: c_uint, Name: *const c_char) -> LLVMValueRef;
+    pub fn LLVMTypeOf(Val: LLVMValueRef) -> LLVMTypeRef;
+    pub fn LLVMDumpType(Val: LLVMTypeRef);
 }
