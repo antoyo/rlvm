@@ -25,6 +25,7 @@ use ffi::{
     LLVMBuilderRef,
     LLVMBuildRet,
     LLVMBuildStore,
+    LLVMBuildSub,
     LLVMBuildUIToFP,
     LLVMCreateBuilder,
     LLVMCreateBuilderInContext,
@@ -283,6 +284,13 @@ impl Builder {
     pub fn store(&self, value: &Value, pointer: &Value) -> Value {
         unsafe {
             Value::from_raw(LLVMBuildStore(self.as_raw(), value.as_raw(), pointer.as_raw()))
+        }
+    }
+
+    pub fn sub(&self, op1: &Value, op2: &Value, name: &str) -> Value {
+        let cstring = CString::new(name).expect("cstring");
+        unsafe {
+            Value::from_raw(LLVMBuildSub(self.as_raw(), op1.as_raw(), op2.as_raw(), cstring.as_ptr()))
         }
     }
 

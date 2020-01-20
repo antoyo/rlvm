@@ -212,4 +212,5 @@ extern "C" {
     pub fn LLVMBuildGEP2(B: LLVMBuilderRef, Ty: LLVMTypeRef, Pointer: LLVMValueRef, Indices: *mut LLVMValueRef, NumIndices: c_uint, Name: *const c_char) -> LLVMValueRef;
     pub fn LLVMTypeOf(Val: LLVMValueRef) -> LLVMTypeRef;
     pub fn LLVMDumpType(Val: LLVMTypeRef);
+    pub fn LLVMBuildSub(builder: LLVMBuilderRef, LHS: LLVMValueRef, RHS: LLVMValueRef, Name: *const c_char) -> LLVMValueRef;
 }
