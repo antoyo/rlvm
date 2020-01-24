@@ -6,6 +6,7 @@ use std::ptr;
 use Module;
 use exec_engine::TargetData;
 use ffi::{
+    LLVMABISizeOfType,
     LLVMCodeGenFileType,
     LLVMCodeGenOptLevel,
     LLVMCodeModel,
@@ -28,6 +29,7 @@ use ffi::{
     LLVMTargetMachineRef,
     LLVMTargetMachineEmitToFile,
 };
+use types::Type;
 
 pub enum CodeGenFileType {
     AssemblyFile,
@@ -46,6 +48,12 @@ impl CodeGenFileType {
 pub struct TargetMachine(LLVMTargetMachineRef);
 
 impl TargetMachine {
+    pub fn abi_size_of_type(&self, typ: &Type) -> u64 {
+        unsafe {
+            LLVMABISizeOfType(self.as_raw(), typ.as_raw()) as u64
+        }
+    }
+
     pub fn as_raw(&self) -> LLVMTargetMachineRef {
         self.0
     }

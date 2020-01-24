@@ -3,6 +3,7 @@ pub mod float;
 pub mod function;
 pub mod integer;
 pub mod pointer;
+pub mod structure;
 
 use ffi::{
     LLVMAlignOf,

@@ -1,6 +1,7 @@
 use std::os::raw::{
     c_char,
     c_uint,
+    c_ulonglong,
     c_void,
 };
 
@@ -213,4 +214,7 @@ extern "C" {
     pub fn LLVMTypeOf(Val: LLVMValueRef) -> LLVMTypeRef;
     pub fn LLVMDumpType(Val: LLVMTypeRef);
     pub fn LLVMBuildSub(builder: LLVMBuilderRef, LHS: LLVMValueRef, RHS: LLVMValueRef, Name: *const c_char) -> LLVMValueRef;
+    pub fn LLVMStructTypeInContext(C: LLVMContextRef, ElementTypes: *mut LLVMTypeRef, ElementCount: c_uint, Packed: LLVMBool) -> LLVMTypeRef;
+    pub fn LLVMStructType(ElementTypes: *mut LLVMTypeRef, ElementCount: c_uint, Packed: LLVMBool) -> LLVMTypeRef;
+    pub fn LLVMABISizeOfType(TD: LLVMTargetDataRef, Ty: LLVMTypeRef) -> c_ulonglong;
 }
