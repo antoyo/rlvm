@@ -217,4 +217,5 @@ extern "C" {
     pub fn LLVMStructTypeInContext(C: LLVMContextRef, ElementTypes: *mut LLVMTypeRef, ElementCount: c_uint, Packed: LLVMBool) -> LLVMTypeRef;
     pub fn LLVMStructType(ElementTypes: *mut LLVMTypeRef, ElementCount: c_uint, Packed: LLVMBool) -> LLVMTypeRef;
     pub fn LLVMABISizeOfType(TD: LLVMTargetDataRef, Ty: LLVMTypeRef) -> c_ulonglong;
+    pub fn LLVMBuildStructGEP2(B: LLVMBuilderRef, Ty: LLVMTypeRef, Pointer: LLVMValueRef, Idx: c_uint, Name: *const c_char) -> LLVMValueRef;
 }

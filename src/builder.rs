@@ -25,6 +25,7 @@ use ffi::{
     LLVMBuilderRef,
     LLVMBuildRet,
     LLVMBuildStore,
+    LLVMBuildStructGEP2,
     LLVMBuildSub,
     LLVMBuildUIToFP,
     LLVMCreateBuilder,
@@ -284,6 +285,13 @@ impl Builder {
     pub fn store(&self, value: &Value, pointer: &Value) -> Value {
         unsafe {
             Value::from_raw(LLVMBuildStore(self.as_raw(), value.as_raw(), pointer.as_raw()))
+        }
+    }
+
+    pub fn struct_gep(&self, typ: &Type, pointer: &Value, index: usize, name: &str) -> Value {
+        let cstring = CString::new(name).expect("cstring");
+        unsafe {
+            Value::from_raw(LLVMBuildStructGEP2(self.as_raw(), typ.as_raw(), pointer.as_raw(), index as c_uint, cstring.as_ptr()))
         }
     }
 
