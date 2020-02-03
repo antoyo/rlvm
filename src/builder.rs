@@ -225,6 +225,7 @@ impl Builder {
     }
 
     pub fn gep(&self, typ: &Type, pointer: &Value, indices: &[Value], name: &str) -> Value {
+        debug_assert_eq!(typ, pointer.get_type().element_type(), "`typ` is different than the type pointed by `pointer`");
         let cstring = CString::new(name).expect("cstring");
         unsafe {
             Value::from_raw(LLVMBuildGEP2(self.as_raw(), typ.as_raw(), pointer.as_raw(), indices.as_ptr() as *mut _, indices.len() as u32, cstring.as_ptr()))
@@ -258,6 +259,8 @@ impl Builder {
     }
 
     pub fn mem_move(&self, dest: &Value, dest_align: usize, src: &Value, src_align: usize, size: &Value) -> Value {
+        debug_assert!(src_align == 0 || src_align.is_power_of_two());
+        debug_assert!(dest_align == 0 || dest_align.is_power_of_two());
         unsafe {
             Value::from_raw(LLVMBuildMemMove(self.as_raw(), dest.as_raw(), dest_align as c_uint, src.as_raw(), src_align as c_uint, size.as_raw()))
         }

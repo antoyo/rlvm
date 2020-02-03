@@ -222,4 +222,6 @@ extern "C" {
     pub fn LLVMBuildMul(B: LLVMBuilderRef, LHS: LLVMValueRef, RHS: LLVMValueRef, Name: *const c_char) -> LLVMValueRef;
     pub fn LLVMBuildAnd(B: LLVMBuilderRef, LHS: LLVMValueRef, RHS: LLVMValueRef, Name: *const c_char) -> LLVMValueRef;
     pub fn LLVMBuildOr(B: LLVMBuilderRef, LHS: LLVMValueRef, RHS: LLVMValueRef, Name: *const c_char) -> LLVMValueRef;
+    pub fn LLVMPrintTypeToString(Val: LLVMTypeRef) -> *mut c_char;
+    pub fn LLVMGetElementType(Ty: LLVMTypeRef) -> LLVMTypeRef;
 }
