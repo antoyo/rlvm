@@ -7,6 +7,7 @@ use basic_block::BasicBlock;
 use ffi::{
     LLVMBuildAdd,
     LLVMBuildAlloca,
+    LLVMBuildAnd,
     LLVMBuildBitCast,
     LLVMBuildBr,
     LLVMBuildCall,
@@ -21,9 +22,12 @@ use ffi::{
     LLVMBuildLoad2,
     LLVMBuildMemMove,
     LLVMBuildMemSet,
+    LLVMBuildMul,
+    LLVMBuildOr,
     LLVMBuildPhi,
     LLVMBuilderRef,
     LLVMBuildRet,
+    LLVMBuildSDiv,
     LLVMBuildStore,
     LLVMBuildStructGEP2,
     LLVMBuildSub,
@@ -141,6 +145,13 @@ impl Builder {
         }
     }
 
+    pub fn and(&self, left: &Value, right: &Value, name: &str) -> Value {
+        let cstring = CString::new(name).expect("cstring");
+        unsafe {
+            Value::from_raw(LLVMBuildAnd(self.as_raw(), left.as_raw(), right.as_raw(), cstring.as_ptr()))
+        }
+    }
+
     pub fn as_raw(&self) -> LLVMBuilderRef {
         self.0
     }
@@ -168,6 +179,13 @@ impl Builder {
     pub fn cond_br(&self, if_: &Value, then: &BasicBlock, else_block: &BasicBlock) -> Value {
         unsafe {
             Value::from_raw(LLVMBuildCondBr(self.as_raw(), if_.as_raw(), then.as_raw(), else_block.as_raw()))
+        }
+    }
+
+    pub fn div(&self, left: &Value, right: &Value, name: &str) -> Value {
+        let cstring = CString::new(name).expect("cstring");
+        unsafe {
+            Value::from_raw(LLVMBuildSDiv(self.as_raw(), left.as_raw(), right.as_raw(), cstring.as_ptr()))
         }
     }
 
@@ -248,6 +266,20 @@ impl Builder {
     pub fn mem_set(&self, ptr: &Value, value: &Value, len: &Value, align: usize) -> Value {
         unsafe {
             Value::from_raw(LLVMBuildMemSet(self.as_raw(), ptr.as_raw(), value.as_raw(), len.as_raw(), align as c_uint))
+        }
+    }
+
+    pub fn mul(&self, left: &Value, right: &Value, name: &str) -> Value {
+        let cstring = CString::new(name).expect("cstring");
+        unsafe {
+            Value::from_raw(LLVMBuildMul(self.as_raw(), left.as_raw(), right.as_raw(), cstring.as_ptr()))
+        }
+    }
+
+    pub fn or(&self, left: &Value, right: &Value, name: &str) -> Value {
+        let cstring = CString::new(name).expect("cstring");
+        unsafe {
+            Value::from_raw(LLVMBuildOr(self.as_raw(), left.as_raw(), right.as_raw(), cstring.as_ptr()))
         }
     }
 
