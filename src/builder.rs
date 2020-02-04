@@ -318,6 +318,7 @@ impl Builder {
     }
 
     pub fn store(&self, value: &Value, pointer: &Value) -> Value {
+        debug_assert_eq!(value.get_type(), pointer.get_type().element_type(), "`value` type is different than the type pointed by `pointer`");
         unsafe {
             Value::from_raw(LLVMBuildStore(self.as_raw(), value.as_raw(), pointer.as_raw()))
         }
