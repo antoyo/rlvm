@@ -171,6 +171,7 @@ impl Builder {
     }
 
     pub fn call(&self, func: Function, args: &[Value], name: &str) -> Value {
+        assert_eq!(func.param_count(), args.len(), "wrong number of argument for function call");
         let cstring = CString::new(name).expect("cstring");
         unsafe {
             Value::from_raw(LLVMBuildCall(self.as_raw(), func.as_raw(), args.as_ptr() as *mut _, args.len() as u32, cstring.as_ptr()))
