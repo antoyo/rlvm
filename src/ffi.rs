@@ -224,4 +224,5 @@ extern "C" {
     pub fn LLVMBuildOr(B: LLVMBuilderRef, LHS: LLVMValueRef, RHS: LLVMValueRef, Name: *const c_char) -> LLVMValueRef;
     pub fn LLVMPrintTypeToString(Val: LLVMTypeRef) -> *mut c_char;
     pub fn LLVMGetElementType(Ty: LLVMTypeRef) -> LLVMTypeRef;
+    pub fn LLVMGetNumContainedTypes(Tp: LLVMTypeRef) -> c_uint;
 }

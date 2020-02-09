@@ -13,6 +13,7 @@ use ffi::{
     LLVMDisposeMessage,
     LLVMDumpType,
     LLVMGetElementType,
+    LLVMGetNumContainedTypes,
     LLVMPrintTypeToString,
     LLVMSizeOf,
     LLVMTypeRef,
@@ -45,6 +46,7 @@ impl Type {
 
     pub fn element_type(&self) -> Type {
         unsafe {
+            debug_assert!(LLVMGetNumContainedTypes(self.as_raw()) > 0, "call element_type() on a pointer type");
             Type::from_raw(LLVMGetElementType(self.as_raw()))
         }
     }
