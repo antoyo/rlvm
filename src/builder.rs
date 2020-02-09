@@ -42,7 +42,7 @@ use ffi::{
     LLVMRealPredicate,
 };
 use module::Function;
-use types::Type;
+use types::{self, Type};
 use value::Value;
 
 pub enum IntPredicate {
@@ -138,6 +138,7 @@ impl Builder {
     }
 
     pub fn alloca(&self, typ: Type, name: &str) -> Value {
+        assert_ne!(typ, types::void(), "invalid type for alloca");
         assert!(self.get_insert_block().is_some(), "position the builder before calling alloca");
         let cstring = CString::new(name).expect("cstring");
         unsafe {
