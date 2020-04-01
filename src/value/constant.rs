@@ -1,6 +1,8 @@
 use std::ffi::CString;
+use std::os::raw::c_uint;
 
 use ffi::{
+    LLVMConstArray,
     LLVMConstInt,
     LLVMConstNull,
     LLVMConstReal,
@@ -8,6 +10,12 @@ use ffi::{
 };
 use types::Type;
 use Value;
+
+pub fn array(element_type: &Type, constant_values: &[Value]) -> Value {
+    // TODO: avoid doing a collect()?
+    let mut values: Vec<_> = constant_values.iter().map(|value| value.as_raw()).collect();
+    unsafe { Value::from_raw(LLVMConstArray(element_type.as_raw(), values.as_mut_ptr(), constant_values.len() as c_uint)) }
+}
 
 pub fn int(typ: Type, value: u64, sign_extend: bool) -> Value {
     unsafe { Value::from_raw(LLVMConstInt(typ.as_raw(), value, sign_extend as i32)) }

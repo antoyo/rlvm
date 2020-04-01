@@ -225,4 +225,5 @@ extern "C" {
     pub fn LLVMPrintTypeToString(Val: LLVMTypeRef) -> *mut c_char;
     pub fn LLVMGetElementType(Ty: LLVMTypeRef) -> LLVMTypeRef;
     pub fn LLVMGetNumContainedTypes(Tp: LLVMTypeRef) -> c_uint;
+    pub fn LLVMConstArray(ElementTy: LLVMTypeRef, ConstantVals: *mut LLVMValueRef, Length: c_uint) -> LLVMValueRef;
 }

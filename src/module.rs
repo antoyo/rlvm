@@ -5,6 +5,7 @@ use basic_block::BasicBlock;
 use exec_engine::TargetData;
 use ffi::{
     LLVMAddFunction,
+    LLVMAddGlobal,
     LLVMAppendBasicBlock,
     LLVMAppendBasicBlockInContext,
     LLVMCountBasicBlocks,
@@ -23,6 +24,7 @@ use ffi::{
     LLVMValueRef,
     LLVMVerifyFunction,
 };
+use global::GlobalVariable;
 use target::TargetTriple;
 use types::Type;
 use value::Value;
@@ -48,6 +50,13 @@ impl Module {
         let cstring = CString::new(name).expect("cstring");
         let value = unsafe { LLVMAddFunction(self.as_raw(), cstring.as_ptr(), function_type.as_raw()) };
         Function(value)
+    }
+
+    pub fn add_global(&self, typ: &Type, name: &str) -> GlobalVariable {
+        let cstring = CString::new(name).expect("cstring");
+        unsafe {
+            GlobalVariable::from_raw(LLVMAddGlobal(self.as_raw(), typ.as_raw(), cstring.as_ptr()))
+        }
     }
 
     pub fn as_raw(&self) -> LLVMModuleRef {
