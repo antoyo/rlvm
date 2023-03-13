@@ -97,7 +97,7 @@ pub enum LLVMCodeModel {
     LLVMCodeModelLarge
 }
 
-#[link(name="LLVM-9")]
+#[link(name="LLVM-15")]
 extern "C" {
     pub fn LLVMModuleCreateWithName(ModuleID: *const c_char) -> LLVMModuleRef;
     pub fn LLVMInt8Type() -> LLVMTypeRef;
